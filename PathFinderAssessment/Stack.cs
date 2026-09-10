@@ -1,4 +1,5 @@
 ﻿// COM 5113 Sample Code - Nick Mitchell 2025
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,22 +10,33 @@ namespace PathFinderAssessment
 {
     internal class Stack<T>
     {
-        // a Stack is a Linked List accessed form the front end
+        // A Stack is a Linked List accessed from the front end.
+        // Stack behaviour is Last-In, First-Out (LIFO).
 
         private readonly LinkedList<T> _list = new LinkedList<T>();
-        
+
+        // Adds an item to the top of the stack.
         public void Push(T data)
         {
             _list.PushFront(data);
         }
 
+        // Removes and returns the item at the top of the stack.
         public T Pop()
         {
-            T item;
-            _list.PopFront(item);
-            return item;
+            return _list.PopFront();
         }
 
-        // TODO: Add other methods as necessary
+        // Returns true if the stack contains no items.
+        public bool IsEmpty()
+        {
+            return _list.IsEmpty();
+        }
+
+        // Returns true if the supplied item exists in the stack.
+        public bool Contains(T data)
+        {
+            return _list.Contains(data);
+        }
     }
 }

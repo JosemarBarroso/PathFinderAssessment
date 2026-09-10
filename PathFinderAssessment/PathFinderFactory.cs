@@ -1,4 +1,5 @@
 ﻿// COM 5113 Sample Code - Nick Mitchell 2025
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,32 +8,42 @@ using System.Threading.Tasks;
 
 namespace PathFinderAssessment
 {
-    // TODO: Make the enum match the algorithms you've implemented
-    enum Algorithm { BreadthFirst, DepthFirst, HillClimbing /*BestFirst, Dijkstras, AStar*/}
+    // More algorithms will be added as we implement them.
+    enum Algorithm
+    {
+        BreadthFirst,
+        DepthFirst,
+        HillClimbing
+    }
 
     internal class PathFinderFactory
     {
-        // Static factory method - can be called when no object is instantiated
-        // Implements Polymorphism:
-        // returns reference of base class type, but actual object is of derived type
+        // Creates the appropriate pathfinder implementation.
         public static PathFinderInterface NewPathFinder(Algorithm algorithm)
         {
-            PathFinderInterface pathFinder; // variable type references the INTERFACE (abstract base)
+            PathFinderInterface pathFinder;
+
             switch (algorithm)
             {
+                case Algorithm.BreadthFirst:
+                    pathFinder = new BreadthFirst();
+                    break;
+
                 case Algorithm.DepthFirst:
-                    // TODO: Implement a Depth First class, and instantiate it here!
+                    // Temporary fallback until DepthFirst is implemented.
+                    pathFinder = new BreadthFirst();
                     break;
 
                 case Algorithm.HillClimbing:
-                    // TODO: Implement a Hillclimbing class, and instantiate it here!
+                    // Temporary fallback until HillClimbing is implemented.
+                    pathFinder = new BreadthFirst();
                     break;
 
-                // TODO: Add more cases the more algorithms you implement
                 default:
-                    pathFinder = new BreadthFirst(); 
+                    pathFinder = new BreadthFirst();
                     break;
             }
+
             return pathFinder;
         }
     }
