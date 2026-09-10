@@ -1,36 +1,91 @@
-﻿// COM 5113 Sample Code - Nick Mitchell 2025
+﻿// COM 5113 Pathfinding Assessment
+
+using System;
+using System.IO;
+
 namespace PathFinderAssessment
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-            // TODO: Read the map file and store the data
+            try
+            {
+                Console.WriteLine("====================================");
+                Console.WriteLine("       PATHFINDING APPLICATION");
+                Console.WriteLine("====================================");
+                Console.WriteLine();
 
-            // Below is some dummy data
-            int[,] map = new int[,]
-            {   { 0, 1, 2, 3 },
-                { 1, 2, 3, 0 },
-                { 2, 3, 0, 1 },
-                { 3, 0, 1, 2 }  };
-            Coord start = new Coord();
-            Coord goal  = new Coord();
+                // Build the path to the first lecturer test map.
+                string mapFile = Path.Combine(
+                    AppContext.BaseDirectory,
+                    "Maps",
+                    "test1Map.txt");
 
-            // TODO: Ask the user to choose the algorithm
-            Algorithm chosenAlgorith = Algorithm.BreadthFirst;
+                Console.WriteLine("Loading map: test1Map.txt");
+                Console.WriteLine();
 
-            // Instantiate the chosen pathfinder
-            PathFinderInterface myPathFinder = PathFinderFactory.NewPathFinder(chosenAlgorith);
+                // Load the terrain map and its start/goal coordinates.
+                int[,] map = MapLoader.LoadMap(
+                    mapFile,
+                    out Coord start,
+                    out Coord goal);
 
-            // A place to store the path
-            LinkedList<Coord> path = new LinkedList<Coord>();
+                Console.WriteLine(
+                    $"Map Size : {map.GetLength(0)} x {map.GetLength(1)}");
 
-            // Call the pathfinder.
-            myPathFinder.FindPath(map, start, goal, ref path);
+                Console.WriteLine(
+                    $"Start    : ({start.Row}, {start.Col})");
 
-            // TODO: Display the path however you want.
+                Console.WriteLine(
+                    $"Goal     : ({goal.Row}, {goal.Col})");
 
-            Console.WriteLine("Goodbye, World!");
+                Console.WriteLine();
+
+                // Select Breadth First Search through the factory.
+                PathFinderInterface pathFinder =
+                    PathFinderFactory.NewPathFinder(
+                        Algorithm.BreadthFirst);
+
+                // The final path will be placed into this custom
+                // LinkedList by the search algorithm.
+                LinkedList<Coord> path = new LinkedList<Coord>();
+
+                Console.WriteLine("Running Breadth First Search...");
+                Console.WriteLine();
+
+                bool pathFound = pathFinder.FindPath(
+                    map,
+                    start,
+                    goal,
+                    ref path);
+
+                if (pathFound)
+                {
+                    Console.WriteLine("Path found successfully.");
+                    Console.WriteLine(
+                        $"Number of coordinates in path: {path.Count()}");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        "No path could be found between the start and goal.");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("ERROR:");
+                Console.WriteLine(ex.Message);
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }
         }
     }
 }
