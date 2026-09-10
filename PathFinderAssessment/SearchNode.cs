@@ -1,4 +1,5 @@
 ﻿// COM 5113 Sample Code - Nick Mitchell 2025
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace PathFinderAssessment
 {
+    // Coordinate used to represent a location in the terrain grid.
+    // Coordinates use (row, column), starting from 0.
     public readonly struct Coord
     {
         public int Row { get; }
@@ -17,51 +20,90 @@ namespace PathFinderAssessment
             Row = row;
             Col = col;
         }
-    }
-    public class SearchNode
-    {
-        public Coord Position { get; }
-        public int Cost { get; set; } // cumulative terrain cost (for Dijkstra and A*)
-        public int Score { get; set; } // heuristic function (for Hillclimbing onwards)
-        public int Estimate => Cost + Score; // Estimated path cost (for A*)
 
-        public SearchNode? Predecessor { get; set; }
-
-        // contructor
-        public SearchNode(Coord pos, int cost = 0, int score = 0, SearchNode? pred = null)
+        // Makes coordinates easier to display while debugging.
+        public override string ToString()
         {
-            Position    = pos;
-            Cost        = cost;
-            Score       = score;
-            Predecessor = pred;
+            return $"({Row}, {Col})";
         }
     }
 
-    public class SearchUtilities
+    // Represents one node/state used by the pathfinding algorithms.
+    public class SearchNode
     {
-        // Builds a path list by walking the predecessor references between nodes
-        // and extracting the coodinates from the visited nodes.
+        // Position of this node in the grid.
+        public Coord Position { get; set; }
+
+        // Cost accumulated from the start node to this node.
+        public int Cost { get; set; }
+
+        // Heuristic score used by informed search algorithms.
+        public int Score { get; set; }
+
+        // Combined estimate used later by A*.
+        // Cost = g(n)
+        // Score = h(n)
+        // Estimate = f(n) = g(n) + h(n)
+        public int Estimate
+        {
+            get
+            {
+                return Cost + Score;
+            }
+        }
+
+        // Previous node in the discovered path.
+        // The start node has no predecessor, so this is nullable.
+        public SearchNode? Predecessor { get; set; }
+
+        // Constructor
+        public SearchNode(
+            Coord position,
+            int cost = 0,
+            int score = 0,
+            SearchNode? predecessor = null)
+        {
+            Position = position;
+            Cost = cost;
+            Score = score;
+            Predecessor = predecessor;
+        }
+    }
+
+    // Utility methods shared by the search algorithms.
+    public static class SearchUtilities
+    {
+        // Builds the final path by following predecessor references
+        // backwards from the goal node to the start node.
         public static LinkedList<Coord> buildPathList(SearchNode? goal)
         {
             LinkedList<Coord> path = new LinkedList<Coord>();
 
-            // start at the goal and walk backwards
-            SearchNode node = goal;
-            while (node != null)
+            // SearchNode is nullable because there may be no path.
+            SearchNode? current = goal;
+
+            while (current != null)
             {
-                path.PushFront(node.Position);
-                node = node.Predecessor;
+                // Push to the front because we are following
+                // the path backwards from goal to start.
+                path.PushFront(current.Position);
+
+                current = current.Predecessor;
             }
 
             return path;
         }
 
+        // Calculates Manhattan distance between two grid coordinates.
+        //
+        // Only North, East, South and West movement is allowed,
+        // so Manhattan distance is appropriate.
         public static int ManhattanDistance(Coord current, Coord goal)
         {
-            // TODO: This would be a good place to put your heuristic function
+            int rowDistance = Math.Abs(current.Row - goal.Row);
+            int columnDistance = Math.Abs(current.Col - goal.Col);
 
-            return 0;
+            return rowDistance + columnDistance;
         }
     }
-    
 }
