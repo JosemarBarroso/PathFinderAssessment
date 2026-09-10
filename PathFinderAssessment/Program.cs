@@ -45,13 +45,13 @@ namespace PathFinderAssessment
                 // Select Breadth First Search through the factory.
                 PathFinderInterface pathFinder =
                     PathFinderFactory.NewPathFinder(
-                        Algorithm.BreadthFirst);
+                        Algorithm.DepthFirst);
 
                 // The final path will be placed into this custom
                 // LinkedList by the search algorithm.
                 LinkedList<Coord> path = new LinkedList<Coord>();
 
-                Console.WriteLine("Running Breadth First Search...");
+                Console.WriteLine("Running Depth First Search...");
                 Console.WriteLine();
 
                 bool pathFound = pathFinder.FindPath(

@@ -30,8 +30,7 @@ namespace PathFinderAssessment
                     break;
 
                 case Algorithm.DepthFirst:
-                    // Temporary fallback until DepthFirst is implemented.
-                    pathFinder = new BreadthFirst();
+                    pathFinder = new DepthFirst();
                     break;
 
                 case Algorithm.HillClimbing:
