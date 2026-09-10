@@ -15,7 +15,8 @@ namespace PathFinderAssessment
         DepthFirst,
         HillClimbing,
         BestFirst,
-        Dijkstras
+        Dijkstras,
+        AStar
     }
 
     internal class PathFinderFactory
@@ -45,6 +46,10 @@ namespace PathFinderAssessment
 
                 case Algorithm.Dijkstras:
                     pathFinder = new Dijkstra();
+                    break;
+
+                case Algorithm.AStar:
+                    pathFinder = new AStar();
                     break;
 
                 default:

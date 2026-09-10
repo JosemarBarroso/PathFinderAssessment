@@ -18,18 +18,39 @@ namespace PathFinderAssessment
         private readonly Comparison<T> _comparison;
 
 
+        // Counts how many times an item has been inserted
+        // into the priority-ordered queue.
+        //
+        // This will later allow A* to report how many times
+        // the Open List ordering operation was performed.
+        public int SortCount { get; private set; }
+
+
         // Constructor
         public PriorityQueue(Comparison<T> comparison)
         {
+            // Create the custom LinkedList used internally.
             _list = new LinkedList<T>();
+
+            // Store the comparison method that determines
+            // the priority of items.
             _comparison = comparison;
+
+            // No ordering operations have taken place yet.
+            SortCount = 0;
         }
 
 
         // Adds an item into the correct priority position.
         public void Enqueue(T data)
         {
+            // Insert the item into its correct position
+            // according to the supplied comparison.
             _list.InsertSorted(data, _comparison);
+
+            // Record that the priority-ordered list
+            // has been updated.
+            SortCount++;
         }
 
 
@@ -63,7 +84,12 @@ namespace PathFinderAssessment
             return _list.Count();
         }
 
+
         // Finds the first item matching the supplied condition.
+        //
+        // This is needed by algorithms such as Dijkstra and A*
+        // when checking whether a coordinate already exists
+        // on the Open List.
         public T? Find(Predicate<T> condition)
         {
             return _list.Find(condition);
@@ -71,6 +97,9 @@ namespace PathFinderAssessment
 
 
         // Removes an item from the priority queue.
+        //
+        // This allows an existing node to be removed and
+        // reinserted when a cheaper path to it is discovered.
         public bool Remove(T data)
         {
             return _list.Remove(data);

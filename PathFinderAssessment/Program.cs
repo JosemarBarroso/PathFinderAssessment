@@ -16,20 +16,31 @@ namespace PathFinderAssessment
                 Console.WriteLine("====================================");
                 Console.WriteLine();
 
-                // Build the path to the first lecturer test map.
+                // -----------------------------------------------------
+                // STEP 1: Let the user select a terrain map.
+                // -----------------------------------------------------
+                string mapFileName = SelectMap();
+
                 string mapFile = Path.Combine(
                     AppContext.BaseDirectory,
                     "Maps",
-                    "test1Map.txt");
+                    mapFileName);
 
-                Console.WriteLine("Loading map: test1Map.txt");
+                Console.WriteLine();
+                Console.WriteLine(
+                    $"Loading map: {mapFileName}");
+
                 Console.WriteLine();
 
-                // Load the terrain map and its start/goal coordinates.
+
+                // -----------------------------------------------------
+                // STEP 2: Load map, start and goal coordinates.
+                // -----------------------------------------------------
                 int[,] map = MapLoader.LoadMap(
                     mapFile,
                     out Coord start,
                     out Coord goal);
+
 
                 Console.WriteLine(
                     $"Map Size : {map.GetLength(0)} x {map.GetLength(1)}");
@@ -42,32 +53,59 @@ namespace PathFinderAssessment
 
                 Console.WriteLine();
 
-                // Select Breadth First Search through the factory.
+
+                // -----------------------------------------------------
+                // STEP 3: Let the user select a search algorithm.
+                // -----------------------------------------------------
+                Algorithm selectedAlgorithm =
+                    SelectAlgorithm();
+
+
+                // -----------------------------------------------------
+                // STEP 4: Create the selected algorithm using
+                // PathFinderFactory.
+                // -----------------------------------------------------
                 PathFinderInterface pathFinder =
                     PathFinderFactory.NewPathFinder(
-                        Algorithm.Dijkstras);
+                        selectedAlgorithm);
 
-                // The final path will be placed into this custom
-                // LinkedList by the search algorithm.
-                LinkedList<Coord> path = new LinkedList<Coord>();
 
-                Console.WriteLine("Running Dijkstra's Search...");
+                // Custom LinkedList used to store the final path.
+                LinkedList<Coord> path =
+                    new LinkedList<Coord>();
+
+
                 Console.WriteLine();
 
+                Console.WriteLine(
+                    $"Running {GetAlgorithmName(selectedAlgorithm)}...");
+
+                Console.WriteLine();
+
+
+                // -----------------------------------------------------
+                // STEP 5: Execute the search.
+                // -----------------------------------------------------
                 bool pathFound = pathFinder.FindPath(
                     map,
                     start,
                     goal,
                     ref path);
 
+
+                // -----------------------------------------------------
+                // STEP 6: Display the search result.
+                // -----------------------------------------------------
                 if (pathFound)
                 {
-                    Console.WriteLine("Path found successfully.");
+                    Console.WriteLine(
+                        "Path found successfully.");
 
                     Console.WriteLine(
                         $"Number of coordinates in path: {path.Count()}");
 
                     Console.WriteLine();
+
                     Console.WriteLine("Path:");
 
                     // Display every coordinate from start to goal.
@@ -76,12 +114,36 @@ namespace PathFinderAssessment
                         Console.WriteLine(
                             $"({coordinate.Row}, {coordinate.Col})");
                     });
+
+
+                    // -------------------------------------------------
+                    // A* specific information.
+                    // -------------------------------------------------
+                    if (pathFinder is AStar aStar)
+                    {
+                        Console.WriteLine();
+
+                        Console.WriteLine(
+                            $"Open List sort count: {aStar.OpenListSortCount}");
+                    }
                 }
                 else
                 {
                     Console.WriteLine(
                         "No path could be found between the start and goal.");
+
+
+                    // Display A* ordering information even if
+                    // no route is found.
+                    if (pathFinder is AStar aStar)
+                    {
+                        Console.WriteLine();
+
+                        Console.WriteLine(
+                            $"Open List sort count: {aStar.OpenListSortCount}");
+                    }
                 }
+
 
                 Console.WriteLine();
                 Console.WriteLine("Press any key to exit...");
@@ -96,6 +158,150 @@ namespace PathFinderAssessment
                 Console.WriteLine();
                 Console.WriteLine("Press any key to exit...");
                 Console.ReadKey();
+            }
+        }
+
+
+        // =============================================================
+        // MAP SELECTION
+        // =============================================================
+        private static string SelectMap()
+        {
+            while (true)
+            {
+                Console.WriteLine("Select Terrain Map:");
+                Console.WriteLine();
+                Console.WriteLine("1. test1Map.txt");
+                Console.WriteLine("2. test2Map.txt");
+                Console.WriteLine("3. test3Map.txt");
+                Console.WriteLine("4. test4Map.txt");
+                Console.WriteLine("5. test5Map.txt");
+                Console.WriteLine("6. test6Map.txt");
+
+                Console.WriteLine();
+
+                Console.Write("Enter map number (1-6): ");
+
+                string? input = Console.ReadLine();
+
+
+                switch (input)
+                {
+                    case "1":
+                        return "test1Map.txt";
+
+                    case "2":
+                        return "test2Map.txt";
+
+                    case "3":
+                        return "test3Map.txt";
+
+                    case "4":
+                        return "test4Map.txt";
+
+                    case "5":
+                        return "test5Map.txt";
+
+                    case "6":
+                        return "test6Map.txt";
+
+                    default:
+                        Console.WriteLine();
+                        Console.WriteLine(
+                            "Invalid selection. Please enter a number from 1 to 6.");
+
+                        Console.WriteLine();
+                        break;
+                }
+            }
+        }
+
+
+        // =============================================================
+        // ALGORITHM SELECTION
+        // =============================================================
+        private static Algorithm SelectAlgorithm()
+        {
+            while (true)
+            {
+                Console.WriteLine("Select Search Algorithm:");
+                Console.WriteLine();
+
+                Console.WriteLine("1. Breadth First Search");
+                Console.WriteLine("2. Depth First Search");
+                Console.WriteLine("3. Hill Climbing");
+                Console.WriteLine("4. Best First Search");
+                Console.WriteLine("5. Dijkstra's Search");
+                Console.WriteLine("6. A* Search");
+
+                Console.WriteLine();
+
+                Console.Write(
+                    "Enter algorithm number (1-6): ");
+
+                string? input = Console.ReadLine();
+
+
+                switch (input)
+                {
+                    case "1":
+                        return Algorithm.BreadthFirst;
+
+                    case "2":
+                        return Algorithm.DepthFirst;
+
+                    case "3":
+                        return Algorithm.HillClimbing;
+
+                    case "4":
+                        return Algorithm.BestFirst;
+
+                    case "5":
+                        return Algorithm.Dijkstras;
+
+                    case "6":
+                        return Algorithm.AStar;
+
+                    default:
+                        Console.WriteLine();
+                        Console.WriteLine(
+                            "Invalid selection. Please enter a number from 1 to 6.");
+
+                        Console.WriteLine();
+                        break;
+                }
+            }
+        }
+
+
+        // =============================================================
+        // Converts the Algorithm enum into a user-friendly name.
+        // =============================================================
+        private static string GetAlgorithmName(
+            Algorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case Algorithm.BreadthFirst:
+                    return "Breadth First Search";
+
+                case Algorithm.DepthFirst:
+                    return "Depth First Search";
+
+                case Algorithm.HillClimbing:
+                    return "Hill Climbing Search";
+
+                case Algorithm.BestFirst:
+                    return "Best First Search";
+
+                case Algorithm.Dijkstras:
+                    return "Dijkstra's Search";
+
+                case Algorithm.AStar:
+                    return "A* Search";
+
+                default:
+                    return "Unknown Search";
             }
         }
     }
