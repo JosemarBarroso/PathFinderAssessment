@@ -34,8 +34,7 @@ namespace PathFinderAssessment
                     break;
 
                 case Algorithm.HillClimbing:
-                    // Temporary fallback until HillClimbing is implemented.
-                    pathFinder = new BreadthFirst();
+                    pathFinder = new HillClimbing();
                     break;
 
                 default:

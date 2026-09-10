@@ -192,6 +192,46 @@ namespace PathFinderAssessment
             _head = null;
         }
 
+        // Inserts an item into the linked list in sorted order.
+        //
+        // The Comparison<T> supplied by the caller decides
+        // which item should appear before another item.
+        public void InsertSorted(T data, Comparison<T> comparison)
+        {
+            // Create the new element.
+            Element<T> newElement = new Element<T>(data);
+
+            // If the list is empty, the new element becomes the head.
+            if (_head == null)
+            {
+                _head = newElement;
+                return;
+            }
+
+            // If the new item should appear before the current head,
+            // insert it at the front.
+            if (comparison(data, _head.Data) < 0)
+            {
+                newElement.Next = _head;
+                _head = newElement;
+                return;
+            }
+
+            // Otherwise move through the list until the correct
+            // insertion position is found.
+            Element<T> currentElement = _head;
+
+            while (currentElement.Next != null &&
+                   comparison(data, currentElement.Next.Data) >= 0)
+            {
+                currentElement = currentElement.Next;
+            }
+
+            // Insert the new element into its sorted position.
+            newElement.Next = currentElement.Next;
+            currentElement.Next = newElement;
+        }
+
         // Performs an action for every item stored in the linked list.
         // This is useful for displaying or writing path coordinates.
         public void ForEach(Action<T> action)
