@@ -13,7 +13,8 @@ namespace PathFinderAssessment
     {
         BreadthFirst,
         DepthFirst,
-        HillClimbing
+        HillClimbing,
+        BestFirst
     }
 
     internal class PathFinderFactory
@@ -35,6 +36,10 @@ namespace PathFinderAssessment
 
                 case Algorithm.HillClimbing:
                     pathFinder = new HillClimbing();
+                    break;
+
+                case Algorithm.BestFirst:
+                    pathFinder = new BestFirst();
                     break;
 
                 default:
