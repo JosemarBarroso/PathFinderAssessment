@@ -62,5 +62,18 @@ namespace PathFinderAssessment
         {
             return _list.Count();
         }
+
+        // Finds the first item matching the supplied condition.
+        public T? Find(Predicate<T> condition)
+        {
+            return _list.Find(condition);
+        }
+
+
+        // Removes an item from the priority queue.
+        public bool Remove(T data)
+        {
+            return _list.Remove(data);
+        }
     }
 }

@@ -232,6 +232,63 @@ namespace PathFinderAssessment
             currentElement.Next = newElement;
         }
 
+        // Finds and returns the first item that matches the supplied condition.
+        // Returns default if no matching item exists.
+        public T? Find(Predicate<T> condition)
+        {
+            Element<T>? currentElement = _head;
+
+            while (currentElement != null)
+            {
+                if (condition(currentElement.Data))
+                {
+                    return currentElement.Data;
+                }
+
+                currentElement = currentElement.Next;
+            }
+
+            return default;
+        }
+
+
+        // Removes the first occurrence of the supplied item.
+        // Returns true if the item was removed.
+        public bool Remove(T data)
+        {
+            // Nothing can be removed from an empty list.
+            if (_head == null)
+            {
+                return false;
+            }
+
+            // Check whether the head contains the item.
+            if (EqualityComparer<T>.Default.Equals(_head.Data, data))
+            {
+                _head = _head.Next;
+                return true;
+            }
+
+            Element<T> currentElement = _head;
+
+            // Search for the element immediately before the item
+            // that needs to be removed.
+            while (currentElement.Next != null)
+            {
+                if (EqualityComparer<T>.Default.Equals(
+                    currentElement.Next.Data,
+                    data))
+                {
+                    currentElement.Next = currentElement.Next.Next;
+                    return true;
+                }
+
+                currentElement = currentElement.Next;
+            }
+
+            return false;
+        }
+
         // Performs an action for every item stored in the linked list.
         // This is useful for displaying or writing path coordinates.
         public void ForEach(Action<T> action)

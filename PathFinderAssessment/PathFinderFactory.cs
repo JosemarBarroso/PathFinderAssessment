@@ -14,7 +14,8 @@ namespace PathFinderAssessment
         BreadthFirst,
         DepthFirst,
         HillClimbing,
-        BestFirst
+        BestFirst,
+        Dijkstras
     }
 
     internal class PathFinderFactory
@@ -40,6 +41,10 @@ namespace PathFinderAssessment
 
                 case Algorithm.BestFirst:
                     pathFinder = new BestFirst();
+                    break;
+
+                case Algorithm.Dijkstras:
+                    pathFinder = new Dijkstra();
                     break;
 
                 default:
