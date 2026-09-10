@@ -63,8 +63,19 @@ namespace PathFinderAssessment
                 if (pathFound)
                 {
                     Console.WriteLine("Path found successfully.");
+
                     Console.WriteLine(
                         $"Number of coordinates in path: {path.Count()}");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Path:");
+
+                    // Display every coordinate from start to goal.
+                    path.ForEach(coordinate =>
+                    {
+                        Console.WriteLine(
+                            $"({coordinate.Row}, {coordinate.Col})");
+                    });
                 }
                 else
                 {

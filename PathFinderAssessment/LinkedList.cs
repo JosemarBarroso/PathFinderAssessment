@@ -191,5 +191,19 @@ namespace PathFinderAssessment
             // unreachable, so the garbage collector can reclaim it.
             _head = null;
         }
+
+        // Performs an action for every item stored in the linked list.
+        // This is useful for displaying or writing path coordinates.
+        public void ForEach(Action<T> action)
+        {
+            Element<T>? currentElement = _head;
+
+            while (currentElement != null)
+            {
+                action(currentElement.Data);
+
+                currentElement = currentElement.Next;
+            }
+        }
     }
 }
