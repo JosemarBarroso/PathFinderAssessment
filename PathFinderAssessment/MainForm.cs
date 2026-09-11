@@ -120,14 +120,37 @@ namespace PathFinderAssessment
             cmbMap.DropDownStyle =
                 ComboBoxStyle.DropDownList;
 
-            cmbMap.Items.Add("test1Map.txt");
-            cmbMap.Items.Add("test2Map.txt");
-            cmbMap.Items.Add("test3Map.txt");
-            cmbMap.Items.Add("test4Map.txt");
-            cmbMap.Items.Add("test5Map.txt");
-            cmbMap.Items.Add("test6Map.txt");
+            // =========================================================
+            // LOAD ALL MAP FILES DYNAMICALLY
+            // =========================================================
+            string mapsDirectory =
+                Path.Combine(
+                    AppContext.BaseDirectory,
+                    "Maps");
 
-            cmbMap.SelectedIndex = 0;
+            if (Directory.Exists(mapsDirectory))
+            {
+                string[] mapFiles =
+                    Directory.GetFiles(
+                        mapsDirectory,
+                        "*Map.txt");
+
+                // Keep the map list in a predictable order.
+                Array.Sort(
+                    mapFiles,
+                    StringComparer.OrdinalIgnoreCase);
+
+                foreach (string mapFile in mapFiles)
+                {
+                    cmbMap.Items.Add(
+                        Path.GetFileName(mapFile));
+                }
+            }
+
+            if (cmbMap.Items.Count > 0)
+            {
+                cmbMap.SelectedIndex = 0;
+            }
 
             Controls.Add(cmbMap);
 
