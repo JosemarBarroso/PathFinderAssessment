@@ -4,82 +4,109 @@ using System;
 
 namespace PathFinderAssessment
 {
-    internal class DepthFirst : PathFinderInterface
+    internal class DepthFirst :
+        PathFinderInterface,
+        SteppablePathFinderInterface
     {
-        // Finds a path from start to goal using
-        // Depth First Search (DFS).
+        // =============================================================
+        // STEP-BY-STEP SEARCH STATE
+        // =============================================================
+
+        private int[,]? stepMap;
+
+        private Coord stepStart;
+        private Coord stepGoal;
+
+        private Stack<SearchNode>? stepOpen;
+        private Stack<SearchNode>? stepClosed;
+
+        private bool[,]? stepVisited;
+
+        private LinkedList<Coord>? stepOpenCoordinates;
+        private LinkedList<Coord>? stepClosedCoordinates;
+
+        private bool stepInitialised;
+        private bool stepComplete;
+        private bool stepPathFound;
+
+        private LinkedList<Coord>? stepFinalPath;
+
+
+        // =============================================================
+        // NORMAL COMPLETE DFS
+        // =============================================================
+
         public bool FindPath(
             int[,] map,
             Coord start,
             Coord goal,
             ref LinkedList<Coord> path)
         {
-            // OPEN stores discovered nodes that are waiting
-            // to be expanded.
-            //
-            // DFS uses a Stack because it follows
-            // Last-In, First-Out (LIFO) behaviour.
-            Stack<SearchNode> open = new Stack<SearchNode>();
+            Stack<SearchNode> open =
+                new Stack<SearchNode>();
 
-            // CLOSED stores nodes that have already been expanded.
-            Stack<SearchNode> closed = new Stack<SearchNode>();
-
-            // Tracks coordinates that have already been discovered.
-            // This prevents the same coordinate being added repeatedly.
-            bool[,] visited = new bool[
-                map.GetLength(0),
-                map.GetLength(1)
-            ];
-
-            // Create the starting search node.
-            SearchNode startNode = new SearchNode(
-                start,
-                0,
-                0,
-                null
-            );
-
-            // Add the starting node to OPEN.
-            open.Push(startNode);
-
-            // Mark the starting coordinate as discovered.
-            visited[start.Row, start.Col] = true;
+            Stack<SearchNode> closed =
+                new Stack<SearchNode>();
 
 
-            // Continue while there are still nodes to explore.
+            bool[,] visited =
+                new bool[
+                    map.GetLength(0),
+                    map.GetLength(1)
+                ];
+
+
+            SearchNode startNode =
+                new SearchNode(
+                    start,
+                    0,
+                    0,
+                    null);
+
+
+            open.Push(
+                startNode);
+
+
+            visited[
+                start.Row,
+                start.Col] = true;
+
+
             while (!open.IsEmpty())
             {
-                // DFS removes the most recently added node.
-                SearchNode current = open.Pop();
+                SearchNode current =
+                    open.Pop();
 
 
-                // Check whether the current node is the goal.
-                if (current.Position.Row == goal.Row &&
-                    current.Position.Col == goal.Col)
+                if (current.Position.Row ==
+                    goal.Row &&
+                    current.Position.Col ==
+                    goal.Col)
                 {
-                    // Reconstruct the path using predecessor links.
-                    path = SearchUtilities.buildPathList(current);
+                    path =
+                        SearchUtilities.buildPathList(
+                            current);
 
                     return true;
                 }
 
 
                 // -----------------------------------------------------
-                // IMPORTANT:
+                // PUSH IN REVERSE ORDER:
                 //
-                // The lecturer requires normal processing order:
+                // West
+                // South
+                // East
+                // North
                 //
-                // North → East → South → West
+                // Therefore the effective DFS processing order is:
                 //
-                // However, because DFS uses a Stack and PushFront(),
-                // successors must be ADDED in reverse order:
-                //
-                // West → South → East → North
-                //
-                // This means North will be the first successor
-                // removed from the Stack.
+                // North
+                // East
+                // South
+                // West
                 // -----------------------------------------------------
-
 
                 // WEST
                 TryAddSuccessor(
@@ -88,8 +115,7 @@ namespace PathFinderAssessment
                     current.Position.Col - 1,
                     current,
                     open,
-                    visited
-                );
+                    visited);
 
 
                 // SOUTH
@@ -99,8 +125,7 @@ namespace PathFinderAssessment
                     current.Position.Col,
                     current,
                     open,
-                    visited
-                );
+                    visited);
 
 
                 // EAST
@@ -110,8 +135,7 @@ namespace PathFinderAssessment
                     current.Position.Col + 1,
                     current,
                     open,
-                    visited
-                );
+                    visited);
 
 
                 // NORTH
@@ -121,25 +145,286 @@ namespace PathFinderAssessment
                     current.Position.Col,
                     current,
                     open,
-                    visited
-                );
+                    visited);
 
 
-                // Move the expanded node into CLOSED.
-                closed.Push(current);
+                closed.Push(
+                    current);
             }
 
 
-            // OPEN became empty before the goal was found.
-            path = new LinkedList<Coord>();
+            path =
+                new LinkedList<Coord>();
+
 
             return false;
         }
 
 
-        // -------------------------------------------------------------
-        // Creates and adds a valid successor to the DFS stack.
-        // -------------------------------------------------------------
+        // =============================================================
+        // INITIALISE STEP-BY-STEP DFS
+        // =============================================================
+
+        public void InitialiseStepSearch(
+            int[,] map,
+            Coord start,
+            Coord goal)
+        {
+            stepMap =
+                map;
+
+
+            stepStart =
+                start;
+
+
+            stepGoal =
+                goal;
+
+
+            stepOpen =
+                new Stack<SearchNode>();
+
+
+            stepClosed =
+                new Stack<SearchNode>();
+
+
+            stepVisited =
+                new bool[
+                    map.GetLength(0),
+                    map.GetLength(1)
+                ];
+
+
+            stepOpenCoordinates =
+                new LinkedList<Coord>();
+
+
+            stepClosedCoordinates =
+                new LinkedList<Coord>();
+
+
+            SearchNode startNode =
+                new SearchNode(
+                    start,
+                    0,
+                    0,
+                    null);
+
+
+            stepOpen.Push(
+                startNode);
+
+
+            stepOpenCoordinates.PushBack(
+                start);
+
+
+            stepVisited[
+                start.Row,
+                start.Col] = true;
+
+
+            stepInitialised =
+                true;
+
+
+            stepComplete =
+                false;
+
+
+            stepPathFound =
+                false;
+
+
+            stepFinalPath =
+                null;
+        }
+
+
+        // =============================================================
+        // EXECUTE ONE DFS EXPANSION
+        // =============================================================
+
+        public SearchStepResult Step()
+        {
+            if (!stepInitialised ||
+                stepMap == null ||
+                stepOpen == null ||
+                stepClosed == null ||
+                stepVisited == null ||
+                stepOpenCoordinates == null ||
+                stepClosedCoordinates == null)
+            {
+                throw new InvalidOperationException(
+                    "Step search has not been initialised.");
+            }
+
+
+            // Already complete.
+            if (stepComplete)
+            {
+                return new SearchStepResult(
+                    null,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    stepPathFound,
+                    stepFinalPath);
+            }
+
+
+            // Nothing left to search.
+            if (stepOpen.IsEmpty())
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    false;
+
+
+                return new SearchStepResult(
+                    null,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    false,
+                    null);
+            }
+
+
+            // ---------------------------------------------------------
+            // POP ONE NODE FROM OPEN
+            // ---------------------------------------------------------
+
+            SearchNode current =
+                stepOpen.Pop();
+
+
+            stepOpenCoordinates.Remove(
+                current.Position);
+
+
+            // ---------------------------------------------------------
+            // CHECK GOAL
+            // ---------------------------------------------------------
+
+            if (current.Position.Row ==
+                stepGoal.Row &&
+                current.Position.Col ==
+                stepGoal.Col)
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    true;
+
+
+                stepFinalPath =
+                    SearchUtilities.buildPathList(
+                        current);
+
+
+                return new SearchStepResult(
+                    current.Position,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    true,
+                    stepFinalPath);
+            }
+
+
+            // ---------------------------------------------------------
+            // ADD SUCCESSORS
+            //
+            // Push reverse order:
+            //
+            // West → South → East → North
+            //
+            // So effective expansion order becomes:
+            //
+            // North → East → South → West
+            // ---------------------------------------------------------
+
+            // WEST
+            TryAddStepSuccessor(
+                current.Position.Row,
+                current.Position.Col - 1,
+                current);
+
+
+            // SOUTH
+            TryAddStepSuccessor(
+                current.Position.Row + 1,
+                current.Position.Col,
+                current);
+
+
+            // EAST
+            TryAddStepSuccessor(
+                current.Position.Row,
+                current.Position.Col + 1,
+                current);
+
+
+            // NORTH
+            TryAddStepSuccessor(
+                current.Position.Row - 1,
+                current.Position.Col,
+                current);
+
+
+            // ---------------------------------------------------------
+            // MOVE CURRENT TO CLOSED
+            // ---------------------------------------------------------
+
+            stepClosed.Push(
+                current);
+
+
+            stepClosedCoordinates.PushBack(
+                current.Position);
+
+
+            if (stepOpen.IsEmpty())
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    false;
+            }
+
+
+            return new SearchStepResult(
+                current.Position,
+                CopyCoordinateList(
+                    stepOpenCoordinates),
+                CopyCoordinateList(
+                    stepClosedCoordinates),
+                stepComplete,
+                stepPathFound,
+                stepFinalPath);
+        }
+
+
+        // =============================================================
+        // NORMAL DFS SUCCESSOR HELPER
+        // =============================================================
+
         private void TryAddSuccessor(
             int[,] map,
             int row,
@@ -148,61 +433,155 @@ namespace PathFinderAssessment
             Stack<SearchNode> open,
             bool[,] visited)
         {
-            // Ignore coordinates outside the map.
-            if (!IsInsideMap(map, row, col))
-            {
-                return;
-            }
-
-
-            // Terrain value 0 represents a blocked cell.
-            if (map[row, col] == 0)
-            {
-                return;
-            }
-
-
-            // Ignore coordinates that have already been discovered.
-            if (visited[row, col])
-            {
-                return;
-            }
-
-
-            // Create the coordinate for the successor.
-            Coord successorPosition = new Coord(
+            if (!IsInsideMap(
+                map,
                 row,
-                col
-            );
+                col))
+            {
+                return;
+            }
 
 
-            // Create the SearchNode.
-            //
-            // DFS does not use terrain cost or heuristic values
-            // when choosing which node to expand.
-            //
-            // The current node becomes the predecessor so that
-            // the final route can be reconstructed.
-            SearchNode successor = new SearchNode(
-                successorPosition,
-                0,
-                0,
-                current
-            );
+            if (map[
+                row,
+                col] == 0)
+            {
+                return;
+            }
 
 
-            // Add the successor to the top/front of OPEN.
-            open.Push(successor);
+            if (visited[
+                row,
+                col])
+            {
+                return;
+            }
 
 
-            // Mark it as discovered immediately.
-            visited[row, col] = true;
+            Coord successorPosition =
+                new Coord(
+                    row,
+                    col);
+
+
+            SearchNode successor =
+                new SearchNode(
+                    successorPosition,
+                    0,
+                    0,
+                    current);
+
+
+            open.Push(
+                successor);
+
+
+            visited[
+                row,
+                col] = true;
         }
 
 
-        // -------------------------------------------------------------
-        // Checks whether a coordinate is inside the map boundaries.
-        // -------------------------------------------------------------
+        // =============================================================
+        // STEP DFS SUCCESSOR HELPER
+        // =============================================================
+
+        private void TryAddStepSuccessor(
+            int row,
+            int col,
+            SearchNode current)
+        {
+            if (stepMap == null ||
+                stepOpen == null ||
+                stepVisited == null ||
+                stepOpenCoordinates == null)
+            {
+                return;
+            }
+
+
+            if (!IsInsideMap(
+                stepMap,
+                row,
+                col))
+            {
+                return;
+            }
+
+
+            if (stepMap[
+                row,
+                col] == 0)
+            {
+                return;
+            }
+
+
+            if (stepVisited[
+                row,
+                col])
+            {
+                return;
+            }
+
+
+            Coord successorPosition =
+                new Coord(
+                    row,
+                    col);
+
+
+            SearchNode successor =
+                new SearchNode(
+                    successorPosition,
+                    0,
+                    0,
+                    current);
+
+
+            // Actual DFS OPEN stack.
+            stepOpen.Push(
+                successor);
+
+
+            // GUI OPEN list.
+            stepOpenCoordinates.PushBack(
+                successorPosition);
+
+
+            stepVisited[
+                row,
+                col] = true;
+        }
+
+
+        // =============================================================
+        // COPY COORDINATE LIST
+        // =============================================================
+
+        private LinkedList<Coord> CopyCoordinateList(
+            LinkedList<Coord> source)
+        {
+            LinkedList<Coord> copy =
+                new LinkedList<Coord>();
+
+
+            source.ForEach(
+                coordinate =>
+                {
+                    copy.PushBack(
+                        coordinate);
+                });
+
+
+            return copy;
+        }
+
+
+        // =============================================================
+        // MAP BOUNDARY CHECK
+        // =============================================================
+
         private bool IsInsideMap(
             int[,] map,
             int row,

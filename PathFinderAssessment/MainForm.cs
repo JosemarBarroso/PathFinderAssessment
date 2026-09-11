@@ -12,29 +12,30 @@ namespace PathFinderAssessment
         // -------------------------------------------------------------
         // GUI CONTROLS
         // -------------------------------------------------------------
-        private ComboBox cmbMap;
-        private ComboBox cmbAlgorithm;
+        private ComboBox cmbMap = null!;
+        private ComboBox cmbAlgorithm = null!;
 
-        private Button btnLoadMap;
-        private Button btnRunSearch;
-        private Button btnStepSearch;
-        private Button btnReset;
+        private Button btnLoadMap = null!;
+        private Button btnRunSearch = null!;
+        private Button btnStepSearch = null!;
+        private Button btnReset = null!;
 
-        private Panel pnlGrid;
+        private Panel pnlGrid = null!;
 
-        private Label lblStatus;
-        private Label lblStart;
-        private Label lblGoal;
-        private Label lblPathLength;
-        private Label lblSortCount;
+        private Label lblStatus = null!;
+        private Label lblStart = null!;
+        private Label lblGoal = null!;
+        private Label lblPathLength = null!;
+        private Label lblSortCount = null!;
 
-        private TextBox txtResults;
+        private TextBox txtResults = null!;
 
 
         // -------------------------------------------------------------
         // MAP DATA
         // -------------------------------------------------------------
         private int[,]? currentMap;
+
         private Coord currentStart;
         private Coord currentGoal;
 
@@ -49,6 +50,7 @@ namespace PathFinderAssessment
         private SteppablePathFinderInterface? currentStepPathFinder;
 
         private bool stepSearchStarted = false;
+
         private int stepNumber = 0;
 
 
@@ -179,10 +181,14 @@ namespace PathFinderAssessment
             cmbAlgorithm.Items.Add(
                 "A* Search");
 
+
+            // Default algorithm is BFS.
             cmbAlgorithm.SelectedIndex = 0;
+
 
             cmbAlgorithm.SelectedIndexChanged +=
                 CmbAlgorithm_SelectedIndexChanged;
+
 
             Controls.Add(cmbAlgorithm);
 
@@ -223,7 +229,8 @@ namespace PathFinderAssessment
             btnRunSearch.Size =
                 new Size(100, 30);
 
-            btnRunSearch.Enabled = false;
+            btnRunSearch.Enabled =
+                false;
 
             btnRunSearch.Click +=
                 BtnRunSearch_Click;
@@ -246,7 +253,8 @@ namespace PathFinderAssessment
             btnStepSearch.Size =
                 new Size(100, 30);
 
-            btnStepSearch.Enabled = false;
+            btnStepSearch.Enabled =
+                false;
 
             btnStepSearch.Click +=
                 BtnStepSearch_Click;
@@ -308,7 +316,8 @@ namespace PathFinderAssessment
             lblStatus.Location =
                 new Point(750, 80);
 
-            lblStatus.AutoSize = true;
+            lblStatus.AutoSize =
+                true;
 
             Controls.Add(lblStatus);
 
@@ -322,7 +331,8 @@ namespace PathFinderAssessment
             lblStart.Location =
                 new Point(750, 115);
 
-            lblStart.AutoSize = true;
+            lblStart.AutoSize =
+                true;
 
             Controls.Add(lblStart);
 
@@ -336,7 +346,8 @@ namespace PathFinderAssessment
             lblGoal.Location =
                 new Point(750, 145);
 
-            lblGoal.AutoSize = true;
+            lblGoal.AutoSize =
+                true;
 
             Controls.Add(lblGoal);
 
@@ -350,7 +361,8 @@ namespace PathFinderAssessment
             lblPathLength.Location =
                 new Point(750, 175);
 
-            lblPathLength.AutoSize = true;
+            lblPathLength.AutoSize =
+                true;
 
             Controls.Add(lblPathLength);
 
@@ -364,7 +376,8 @@ namespace PathFinderAssessment
             lblSortCount.Location =
                 new Point(750, 205);
 
-            lblSortCount.AutoSize = true;
+            lblSortCount.AutoSize =
+                true;
 
             Controls.Add(lblSortCount);
 
@@ -381,12 +394,14 @@ namespace PathFinderAssessment
             txtResults.Size =
                 new Size(350, 420);
 
-            txtResults.Multiline = true;
+            txtResults.Multiline =
+                true;
 
             txtResults.ScrollBars =
                 ScrollBars.Vertical;
 
-            txtResults.ReadOnly = true;
+            txtResults.ReadOnly =
+                true;
 
             Controls.Add(txtResults);
         }
@@ -436,7 +451,9 @@ namespace PathFinderAssessment
                         out currentGoal);
 
 
-                currentPath = null;
+                currentPath =
+                    null;
+
 
                 ResetStepSearch();
 
@@ -492,12 +509,16 @@ namespace PathFinderAssessment
                     Environment.NewLine);
 
 
-                btnRunSearch.Enabled = true;
+                btnRunSearch.Enabled =
+                    true;
 
 
-                // Step mode currently supports BFS.
+                // Step Search currently supports:
+                // 0 = BFS
+                // 1 = DFS
                 btnStepSearch.Enabled =
-                    cmbAlgorithm.SelectedIndex == 0;
+                    cmbAlgorithm.SelectedIndex == 0 ||
+                    cmbAlgorithm.SelectedIndex == 1;
             }
             catch (Exception ex)
             {
@@ -514,9 +535,12 @@ namespace PathFinderAssessment
                     "Status: Map loading failed";
 
 
-                btnRunSearch.Enabled = false;
+                btnRunSearch.Enabled =
+                    false;
 
-                btnStepSearch.Enabled = false;
+
+                btnStepSearch.Enabled =
+                    false;
             }
         }
 
@@ -560,11 +584,13 @@ namespace PathFinderAssessment
 
 
             int gridWidth =
-                cellSize * columns;
+                cellSize *
+                columns;
 
 
             int gridHeight =
-                cellSize * rows;
+                cellSize *
+                rows;
 
 
             int offsetX =
@@ -621,7 +647,8 @@ namespace PathFinderAssessment
                             FontStyle.Bold);
 
 
-                    // Store coordinate in Tag.
+                    // Store coordinate in Tag so the same cell
+                    // can later be found for search visualisation.
                     cell.Tag =
                         new Coord(
                             row,
@@ -635,7 +662,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // TERRAIN DISPLAY
+                    // TERRAIN
                     // -------------------------------------------------
                     switch (terrain)
                     {
@@ -778,7 +805,7 @@ namespace PathFinderAssessment
 
             try
             {
-                // Stop any previous step session.
+                // Cancel any existing step session.
                 ResetStepSearch();
 
 
@@ -875,7 +902,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // A* SORT COUNT
+                    // A* OPEN LIST SORT COUNT
                     // -------------------------------------------------
                     int? sortCount =
                         null;
@@ -906,7 +933,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // WRITE OUTPUT FILE
+                    // WRITE PATH OUTPUT FILE
                     // -------------------------------------------------
                     string outputFile =
                         PathWriter.WritePath(
@@ -924,7 +951,8 @@ namespace PathFinderAssessment
                 }
                 else
                 {
-                    currentPath = null;
+                    currentPath =
+                        null;
 
 
                     lblStatus.Text =
@@ -961,9 +989,10 @@ namespace PathFinderAssessment
                 }
 
 
-                // BFS step mode can start again after normal search.
+                // Re-enable step search for BFS/DFS.
                 btnStepSearch.Enabled =
-                    cmbAlgorithm.SelectedIndex == 0;
+                    cmbAlgorithm.SelectedIndex == 0 ||
+                    cmbAlgorithm.SelectedIndex == 1;
             }
             catch (Exception ex)
             {
@@ -994,11 +1023,12 @@ namespace PathFinderAssessment
 
             if (currentMap != null)
             {
-                // Remove any previous path/search colours.
+                // Remove previous path/search colours.
                 DrawMap();
 
 
-                currentPath = null;
+                currentPath =
+                    null;
 
 
                 lblPathLength.Text =
@@ -1014,10 +1044,12 @@ namespace PathFinderAssessment
             }
 
 
-            // For now, step visualisation is available for BFS only.
+            // Step visualisation currently supports:
+            // BFS and DFS.
             btnStepSearch.Enabled =
                 currentMap != null &&
-                cmbAlgorithm.SelectedIndex == 0;
+                (cmbAlgorithm.SelectedIndex == 0 ||
+                 cmbAlgorithm.SelectedIndex == 1);
         }
 
 
@@ -1134,7 +1166,6 @@ namespace PathFinderAssessment
             path.ForEach(
                 coordinate =>
                 {
-                    // Keep start and goal colours.
                     if (IsStartOrGoal(
                         coordinate))
                     {
@@ -1174,7 +1205,7 @@ namespace PathFinderAssessment
             if (currentMap == null)
             {
                 MessageBox.Show(
-                    "Please load a map before starting step search.",
+                    "Please load a map before starting Step Search.",
                     "No Map Loaded",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -1183,12 +1214,14 @@ namespace PathFinderAssessment
             }
 
 
-            // Currently only BFS supports stepping.
-            if (cmbAlgorithm.SelectedIndex != 0)
+            // Currently BFS and DFS implement the
+            // SteppablePathFinderInterface.
+            if (cmbAlgorithm.SelectedIndex != 0 &&
+                cmbAlgorithm.SelectedIndex != 1)
             {
                 MessageBox.Show(
                     "Step-by-step visualisation is currently available " +
-                    "for Breadth First Search only.",
+                    "for Breadth First Search and Depth First Search.",
                     "Step Search",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -1199,14 +1232,24 @@ namespace PathFinderAssessment
 
             try
             {
+                // Determine selected algorithm dynamically.
+                Algorithm selectedAlgorithm =
+                    GetSelectedAlgorithm();
+
+
+                string algorithmName =
+                    GetAlgorithmName(
+                        selectedAlgorithm);
+
+
                 // =====================================================
-                // FIRST CLICK - INITIALISE BFS
+                // FIRST CLICK - INITIALISE SEARCH
                 // =====================================================
                 if (!stepSearchStarted)
                 {
                     PathFinderInterface pathFinder =
                         PathFinderFactory.NewPathFinder(
-                            Algorithm.BreadthFirst);
+                            selectedAlgorithm);
 
 
                     currentStepPathFinder =
@@ -1217,7 +1260,7 @@ namespace PathFinderAssessment
                     if (currentStepPathFinder == null)
                     {
                         throw new InvalidOperationException(
-                            "Breadth First Search does not support " +
+                            $"{algorithmName} does not support " +
                             "step-by-step execution.");
                     }
 
@@ -1247,11 +1290,15 @@ namespace PathFinderAssessment
                         "Path Length: -";
 
 
+                    lblSortCount.Text =
+                        "A* Open List Sort Count: -";
+
+
                     txtResults.Clear();
 
 
                     txtResults.AppendText(
-                        "Breadth First Search - Step Visualisation" +
+                        $"{algorithmName} - Step Visualisation" +
                         Environment.NewLine);
 
 
@@ -1273,7 +1320,7 @@ namespace PathFinderAssessment
 
 
                 // =====================================================
-                // EXECUTE ONE EXPANSION
+                // EXECUTE EXACTLY ONE SEARCH EXPANSION
                 // =====================================================
                 SearchStepResult result =
                     currentStepPathFinder!.Step();
@@ -1282,17 +1329,17 @@ namespace PathFinderAssessment
                 stepNumber++;
 
 
-                // Restore base terrain.
+                // Restore terrain.
                 DrawMap();
 
 
-                // Overlay search state.
+                // Overlay current search state.
                 DrawSearchStep(
                     result);
 
 
                 lblStatus.Text =
-                    $"Status: BFS Step {stepNumber}";
+                    $"Status: {algorithmName} Step {stepNumber}";
 
 
                 // =====================================================
@@ -1338,7 +1385,7 @@ namespace PathFinderAssessment
 
 
                 // =====================================================
-                // SEARCH FINISHED
+                // SEARCH COMPLETE
                 // =====================================================
                 if (result.IsComplete)
                 {
@@ -1353,14 +1400,13 @@ namespace PathFinderAssessment
                             result.Path;
 
 
-                        // Final path is drawn over the
-                        // search visualisation.
+                        // Draw final path over search-state colours.
                         HighlightPath(
                             result.Path);
 
 
                         lblStatus.Text =
-                            $"Status: BFS completed in " +
+                            $"Status: {algorithmName} completed in " +
                             $"{stepNumber} steps";
 
 
@@ -1395,7 +1441,7 @@ namespace PathFinderAssessment
 
 
                         // ---------------------------------------------
-                        // WRITE FINAL PATH FILE
+                        // WRITE FINAL PATH OUTPUT FILE
                         // ---------------------------------------------
                         if (!string.IsNullOrWhiteSpace(
                             currentMapFileName))
@@ -1403,7 +1449,7 @@ namespace PathFinderAssessment
                             string outputFile =
                                 PathWriter.WritePath(
                                     currentMapFileName,
-                                    "Breadth First Search",
+                                    algorithmName,
                                     result.Path);
 
 
@@ -1417,7 +1463,8 @@ namespace PathFinderAssessment
                     else
                     {
                         lblStatus.Text =
-                            "Status: BFS completed - no path found";
+                            $"Status: {algorithmName} completed - " +
+                            "no path found";
 
 
                         lblPathLength.Text =
@@ -1456,6 +1503,7 @@ namespace PathFinderAssessment
         {
             // =========================================================
             // CLOSED LIST
+            // Already expanded.
             // =========================================================
             result.ClosedList.ForEach(
                 coordinate =>
@@ -1488,6 +1536,7 @@ namespace PathFinderAssessment
 
             // =========================================================
             // OPEN LIST
+            // Discovered but waiting to be expanded.
             // =========================================================
             result.OpenList.ForEach(
                 coordinate =>
@@ -1519,7 +1568,8 @@ namespace PathFinderAssessment
 
 
             // =========================================================
-            // CURRENT EXPANDED NODE
+            // CURRENT NODE
+            // Node expanded during this step.
             // =========================================================
             if (result.CurrentNode.HasValue)
             {
