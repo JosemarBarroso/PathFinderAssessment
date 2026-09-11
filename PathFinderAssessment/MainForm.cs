@@ -529,13 +529,15 @@ namespace PathFinderAssessment
                 // 2 = Hill Climbing
                 // 3 = Best First Search
                 // 4 = Dijkstra's Search
+                // 5 = A* Search
                 // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
                     cmbAlgorithm.SelectedIndex == 1 ||
                     cmbAlgorithm.SelectedIndex == 2 ||
                     cmbAlgorithm.SelectedIndex == 3 ||
-                    cmbAlgorithm.SelectedIndex == 4;
+                    cmbAlgorithm.SelectedIndex == 4 ||
+                    cmbAlgorithm.SelectedIndex == 5;
             }
             catch (Exception ex)
             {
@@ -1011,13 +1013,15 @@ namespace PathFinderAssessment
                 // Hill Climbing
                 // Best First
                 // Dijkstra
+                // A*
                 // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
                     cmbAlgorithm.SelectedIndex == 1 ||
                     cmbAlgorithm.SelectedIndex == 2 ||
                     cmbAlgorithm.SelectedIndex == 3 ||
-                    cmbAlgorithm.SelectedIndex == 4;
+                    cmbAlgorithm.SelectedIndex == 4 ||
+                    cmbAlgorithm.SelectedIndex == 5;
             }
             catch (Exception ex)
             {
@@ -1076,6 +1080,7 @@ namespace PathFinderAssessment
             // Hill Climbing
             // Best First Search
             // Dijkstra's Search
+            // A* Search
             // ---------------------------------------------------------
             btnStepSearch.Enabled =
                 currentMap != null &&
@@ -1083,7 +1088,8 @@ namespace PathFinderAssessment
                  cmbAlgorithm.SelectedIndex == 1 ||
                  cmbAlgorithm.SelectedIndex == 2 ||
                  cmbAlgorithm.SelectedIndex == 3 ||
-                 cmbAlgorithm.SelectedIndex == 4);
+                 cmbAlgorithm.SelectedIndex == 4 ||
+                 cmbAlgorithm.SelectedIndex == 5);
         }
 
 
@@ -1256,17 +1262,18 @@ namespace PathFinderAssessment
             // 2 = Hill Climbing
             // 3 = Best First Search
             // 4 = Dijkstra's Search
+            // 5 = A* Search
             // ---------------------------------------------------------
             if (cmbAlgorithm.SelectedIndex != 0 &&
                 cmbAlgorithm.SelectedIndex != 1 &&
                 cmbAlgorithm.SelectedIndex != 2 &&
                 cmbAlgorithm.SelectedIndex != 3 &&
-                cmbAlgorithm.SelectedIndex != 4)
+                cmbAlgorithm.SelectedIndex != 4 &&
+                cmbAlgorithm.SelectedIndex != 5)
             {
                 MessageBox.Show(
-                    "Step-by-step visualisation is currently available " +
-                    "for Breadth First Search, Depth First Search, " +
-                    "Hill Climbing, Best First Search and Dijkstra's Search.",
+                    "Step-by-step visualisation is available " +
+                    "for all six search algorithms.",
                     "Step Search",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -1374,6 +1381,21 @@ namespace PathFinderAssessment
 
 
                 stepNumber++;
+
+
+                // -----------------------------------------------------
+                // A* OPEN LIST SORT COUNT DURING STEP SEARCH
+                // -----------------------------------------------------
+                if (currentStepPathFinder is AStar stepAStar)
+                {
+                    lblSortCount.Text =
+                        $"A* Open List Sort Count: {stepAStar.OpenListSortCount}";
+                }
+                else
+                {
+                    lblSortCount.Text =
+                        "A* Open List Sort Count: -";
+                }
 
 
                 DrawMap();
@@ -1490,11 +1512,35 @@ namespace PathFinderAssessment
                         if (!string.IsNullOrWhiteSpace(
                             currentMapFileName))
                         {
+                            int? sortCount =
+                                null;
+
+
+                            if (currentStepPathFinder is AStar completedAStar)
+                            {
+                                sortCount =
+                                    completedAStar.OpenListSortCount;
+
+
+                                lblSortCount.Text =
+                                    $"A* Open List Sort Count: " +
+                                    $"{completedAStar.OpenListSortCount}";
+
+
+                                txtResults.AppendText(
+                                    Environment.NewLine +
+                                    $"Open List sort count: " +
+                                    $"{completedAStar.OpenListSortCount}" +
+                                    Environment.NewLine);
+                            }
+
+
                             string outputFile =
                                 PathWriter.WritePath(
                                     currentMapFileName,
                                     algorithmName,
-                                    result.Path);
+                                    result.Path,
+                                    sortCount);
 
 
                             txtResults.AppendText(
