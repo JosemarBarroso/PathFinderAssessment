@@ -40,8 +40,16 @@ namespace PathFinderAssessment
 
         private string? currentMapFileName;
 
-        // Stores the result of the most recent search.
         private LinkedList<Coord>? currentPath;
+
+
+        // -------------------------------------------------------------
+        // STEP-BY-STEP SEARCH DATA
+        // -------------------------------------------------------------
+        private SteppablePathFinderInterface? currentStepPathFinder;
+
+        private bool stepSearchStarted = false;
+        private int stepNumber = 0;
 
 
         // -------------------------------------------------------------
@@ -64,9 +72,11 @@ namespace PathFinderAssessment
             Width = 1150;
             Height = 750;
 
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition =
+                FormStartPosition.CenterScreen;
 
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            FormBorderStyle =
+                FormBorderStyle.FixedSingle;
 
             MaximizeBox = false;
         }
@@ -80,10 +90,15 @@ namespace PathFinderAssessment
             // =========================================================
             // MAP LABEL
             // =========================================================
-            Label lblMap = new Label();
+            Label lblMap =
+                new Label();
 
-            lblMap.Text = "Terrain Map:";
-            lblMap.Location = new Point(20, 20);
+            lblMap.Text =
+                "Terrain Map:";
+
+            lblMap.Location =
+                new Point(20, 20);
+
             lblMap.AutoSize = true;
 
             Controls.Add(lblMap);
@@ -92,12 +107,16 @@ namespace PathFinderAssessment
             // =========================================================
             // MAP COMBO BOX
             // =========================================================
-            cmbMap = new ComboBox();
+            cmbMap =
+                new ComboBox();
 
-            cmbMap.Location = new Point(120, 17);
+            cmbMap.Location =
+                new Point(120, 17);
+
             cmbMap.Width = 180;
 
-            cmbMap.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbMap.DropDownStyle =
+                ComboBoxStyle.DropDownList;
 
             cmbMap.Items.Add("test1Map.txt");
             cmbMap.Items.Add("test2Map.txt");
@@ -114,10 +133,15 @@ namespace PathFinderAssessment
             // =========================================================
             // ALGORITHM LABEL
             // =========================================================
-            Label lblAlgorithm = new Label();
+            Label lblAlgorithm =
+                new Label();
 
-            lblAlgorithm.Text = "Algorithm:";
-            lblAlgorithm.Location = new Point(330, 20);
+            lblAlgorithm.Text =
+                "Algorithm:";
+
+            lblAlgorithm.Location =
+                new Point(330, 20);
+
             lblAlgorithm.AutoSize = true;
 
             Controls.Add(lblAlgorithm);
@@ -126,21 +150,39 @@ namespace PathFinderAssessment
             // =========================================================
             // ALGORITHM COMBO BOX
             // =========================================================
-            cmbAlgorithm = new ComboBox();
+            cmbAlgorithm =
+                new ComboBox();
 
-            cmbAlgorithm.Location = new Point(410, 17);
+            cmbAlgorithm.Location =
+                new Point(410, 17);
+
             cmbAlgorithm.Width = 190;
 
-            cmbAlgorithm.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbAlgorithm.DropDownStyle =
+                ComboBoxStyle.DropDownList;
 
-            cmbAlgorithm.Items.Add("Breadth First Search");
-            cmbAlgorithm.Items.Add("Depth First Search");
-            cmbAlgorithm.Items.Add("Hill Climbing");
-            cmbAlgorithm.Items.Add("Best First Search");
-            cmbAlgorithm.Items.Add("Dijkstra's Search");
-            cmbAlgorithm.Items.Add("A* Search");
+            cmbAlgorithm.Items.Add(
+                "Breadth First Search");
+
+            cmbAlgorithm.Items.Add(
+                "Depth First Search");
+
+            cmbAlgorithm.Items.Add(
+                "Hill Climbing");
+
+            cmbAlgorithm.Items.Add(
+                "Best First Search");
+
+            cmbAlgorithm.Items.Add(
+                "Dijkstra's Search");
+
+            cmbAlgorithm.Items.Add(
+                "A* Search");
 
             cmbAlgorithm.SelectedIndex = 0;
+
+            cmbAlgorithm.SelectedIndexChanged +=
+                CmbAlgorithm_SelectedIndexChanged;
 
             Controls.Add(cmbAlgorithm);
 
@@ -148,13 +190,20 @@ namespace PathFinderAssessment
             // =========================================================
             // LOAD MAP BUTTON
             // =========================================================
-            btnLoadMap = new Button();
+            btnLoadMap =
+                new Button();
 
-            btnLoadMap.Text = "Load Map";
-            btnLoadMap.Location = new Point(630, 15);
-            btnLoadMap.Size = new Size(100, 30);
+            btnLoadMap.Text =
+                "Load Map";
 
-            btnLoadMap.Click += BtnLoadMap_Click;
+            btnLoadMap.Location =
+                new Point(630, 15);
+
+            btnLoadMap.Size =
+                new Size(100, 30);
+
+            btnLoadMap.Click +=
+                BtnLoadMap_Click;
 
             Controls.Add(btnLoadMap);
 
@@ -162,15 +211,22 @@ namespace PathFinderAssessment
             // =========================================================
             // RUN SEARCH BUTTON
             // =========================================================
-            btnRunSearch = new Button();
+            btnRunSearch =
+                new Button();
 
-            btnRunSearch.Text = "Run Search";
-            btnRunSearch.Location = new Point(740, 15);
-            btnRunSearch.Size = new Size(100, 30);
+            btnRunSearch.Text =
+                "Run Search";
+
+            btnRunSearch.Location =
+                new Point(740, 15);
+
+            btnRunSearch.Size =
+                new Size(100, 30);
 
             btnRunSearch.Enabled = false;
 
-            btnRunSearch.Click += BtnRunSearch_Click;
+            btnRunSearch.Click +=
+                BtnRunSearch_Click;
 
             Controls.Add(btnRunSearch);
 
@@ -178,15 +234,22 @@ namespace PathFinderAssessment
             // =========================================================
             // STEP SEARCH BUTTON
             // =========================================================
-            btnStepSearch = new Button();
+            btnStepSearch =
+                new Button();
 
-            btnStepSearch.Text = "Step Search";
-            btnStepSearch.Location = new Point(850, 15);
-            btnStepSearch.Size = new Size(100, 30);
+            btnStepSearch.Text =
+                "Step Search";
+
+            btnStepSearch.Location =
+                new Point(850, 15);
+
+            btnStepSearch.Size =
+                new Size(100, 30);
 
             btnStepSearch.Enabled = false;
 
-            btnStepSearch.Click += BtnStepSearch_Click;
+            btnStepSearch.Click +=
+                BtnStepSearch_Click;
 
             Controls.Add(btnStepSearch);
 
@@ -194,13 +257,20 @@ namespace PathFinderAssessment
             // =========================================================
             // RESET BUTTON
             // =========================================================
-            btnReset = new Button();
+            btnReset =
+                new Button();
 
-            btnReset.Text = "Reset";
-            btnReset.Location = new Point(960, 15);
-            btnReset.Size = new Size(100, 30);
+            btnReset.Text =
+                "Reset";
 
-            btnReset.Click += BtnReset_Click;
+            btnReset.Location =
+                new Point(960, 15);
+
+            btnReset.Size =
+                new Size(100, 30);
+
+            btnReset.Click +=
+                BtnReset_Click;
 
             Controls.Add(btnReset);
 
@@ -208,13 +278,20 @@ namespace PathFinderAssessment
             // =========================================================
             // GRID PANEL
             // =========================================================
-            pnlGrid = new Panel();
+            pnlGrid =
+                new Panel();
 
-            pnlGrid.Location = new Point(20, 70);
-            pnlGrid.Size = new Size(700, 600);
+            pnlGrid.Location =
+                new Point(20, 70);
 
-            pnlGrid.BorderStyle = BorderStyle.FixedSingle;
-            pnlGrid.BackColor = Color.White;
+            pnlGrid.Size =
+                new Size(700, 600);
+
+            pnlGrid.BorderStyle =
+                BorderStyle.FixedSingle;
+
+            pnlGrid.BackColor =
+                Color.White;
 
             Controls.Add(pnlGrid);
 
@@ -222,46 +299,71 @@ namespace PathFinderAssessment
             // =========================================================
             // INFORMATION LABELS
             // =========================================================
-            lblStatus = new Label();
+            lblStatus =
+                new Label();
 
-            lblStatus.Text = "Status: No map loaded";
-            lblStatus.Location = new Point(750, 80);
+            lblStatus.Text =
+                "Status: No map loaded";
+
+            lblStatus.Location =
+                new Point(750, 80);
+
             lblStatus.AutoSize = true;
 
             Controls.Add(lblStatus);
 
 
-            lblStart = new Label();
+            lblStart =
+                new Label();
 
-            lblStart.Text = "Start: -";
-            lblStart.Location = new Point(750, 115);
+            lblStart.Text =
+                "Start: -";
+
+            lblStart.Location =
+                new Point(750, 115);
+
             lblStart.AutoSize = true;
 
             Controls.Add(lblStart);
 
 
-            lblGoal = new Label();
+            lblGoal =
+                new Label();
 
-            lblGoal.Text = "Goal: -";
-            lblGoal.Location = new Point(750, 145);
+            lblGoal.Text =
+                "Goal: -";
+
+            lblGoal.Location =
+                new Point(750, 145);
+
             lblGoal.AutoSize = true;
 
             Controls.Add(lblGoal);
 
 
-            lblPathLength = new Label();
+            lblPathLength =
+                new Label();
 
-            lblPathLength.Text = "Path Length: -";
-            lblPathLength.Location = new Point(750, 175);
+            lblPathLength.Text =
+                "Path Length: -";
+
+            lblPathLength.Location =
+                new Point(750, 175);
+
             lblPathLength.AutoSize = true;
 
             Controls.Add(lblPathLength);
 
 
-            lblSortCount = new Label();
+            lblSortCount =
+                new Label();
 
-            lblSortCount.Text = "A* Open List Sort Count: -";
-            lblSortCount.Location = new Point(750, 205);
+            lblSortCount.Text =
+                "A* Open List Sort Count: -";
+
+            lblSortCount.Location =
+                new Point(750, 205);
+
             lblSortCount.AutoSize = true;
 
             Controls.Add(lblSortCount);
@@ -270,13 +372,20 @@ namespace PathFinderAssessment
             // =========================================================
             // RESULTS TEXTBOX
             // =========================================================
-            txtResults = new TextBox();
+            txtResults =
+                new TextBox();
 
-            txtResults.Location = new Point(750, 250);
-            txtResults.Size = new Size(350, 420);
+            txtResults.Location =
+                new Point(750, 250);
+
+            txtResults.Size =
+                new Size(350, 420);
 
             txtResults.Multiline = true;
-            txtResults.ScrollBars = ScrollBars.Vertical;
+
+            txtResults.ScrollBars =
+                ScrollBars.Vertical;
+
             txtResults.ReadOnly = true;
 
             Controls.Add(txtResults);
@@ -286,14 +395,18 @@ namespace PathFinderAssessment
         // -------------------------------------------------------------
         // LOAD MAP
         // -------------------------------------------------------------
-        private void BtnLoadMap_Click(object? sender, EventArgs e)
+        private void BtnLoadMap_Click(
+            object? sender,
+            EventArgs e)
         {
             try
             {
                 string? selectedMap =
                     cmbMap.SelectedItem?.ToString();
 
-                if (string.IsNullOrWhiteSpace(selectedMap))
+
+                if (string.IsNullOrWhiteSpace(
+                    selectedMap))
                 {
                     MessageBox.Show(
                         "Please select a terrain map.",
@@ -305,7 +418,9 @@ namespace PathFinderAssessment
                 }
 
 
-                currentMapFileName = selectedMap;
+                currentMapFileName =
+                    selectedMap;
+
 
                 string mapFilePath =
                     Path.Combine(
@@ -323,20 +438,27 @@ namespace PathFinderAssessment
 
                 currentPath = null;
 
+                ResetStepSearch();
+
+
                 DrawMap();
 
 
                 lblStatus.Text =
                     $"Status: {selectedMap} loaded";
 
+
                 lblStart.Text =
                     $"Start: ({currentStart.Row}, {currentStart.Col})";
+
 
                 lblGoal.Text =
                     $"Goal: ({currentGoal.Row}, {currentGoal.Col})";
 
+
                 lblPathLength.Text =
                     "Path Length: -";
+
 
                 lblSortCount.Text =
                     "A* Open List Sort Count: -";
@@ -344,39 +466,56 @@ namespace PathFinderAssessment
 
                 txtResults.Clear();
 
-                txtResults.AppendText(
-                    $"Map: {selectedMap}{Environment.NewLine}");
 
                 txtResults.AppendText(
-                    $"Rows: {currentMap.GetLength(0)}{Environment.NewLine}");
+                    $"Map: {selectedMap}" +
+                    Environment.NewLine);
+
 
                 txtResults.AppendText(
-                    $"Columns: {currentMap.GetLength(1)}{Environment.NewLine}");
+                    $"Rows: {currentMap.GetLength(0)}" +
+                    Environment.NewLine);
+
 
                 txtResults.AppendText(
-                    $"Start: ({currentStart.Row}, {currentStart.Col}){Environment.NewLine}");
+                    $"Columns: {currentMap.GetLength(1)}" +
+                    Environment.NewLine);
+
 
                 txtResults.AppendText(
-                    $"Goal: ({currentGoal.Row}, {currentGoal.Col}){Environment.NewLine}");
+                    $"Start: ({currentStart.Row}, {currentStart.Col})" +
+                    Environment.NewLine);
+
+
+                txtResults.AppendText(
+                    $"Goal: ({currentGoal.Row}, {currentGoal.Col})" +
+                    Environment.NewLine);
 
 
                 btnRunSearch.Enabled = true;
 
-                // Step mode comes later.
-                btnStepSearch.Enabled = false;
+
+                // Step mode currently supports BFS.
+                btnStepSearch.Enabled =
+                    cmbAlgorithm.SelectedIndex == 0;
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"The map could not be loaded.{Environment.NewLine}{Environment.NewLine}{ex.Message}",
+                    $"The map could not be loaded." +
+                    $"{Environment.NewLine}{Environment.NewLine}" +
+                    ex.Message,
                     "Map Loading Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
+
                 lblStatus.Text =
                     "Status: Map loading failed";
 
+
                 btnRunSearch.Enabled = false;
+
                 btnStepSearch.Enabled = false;
             }
         }
@@ -399,123 +538,218 @@ namespace PathFinderAssessment
             int rows =
                 currentMap.GetLength(0);
 
+
             int columns =
                 currentMap.GetLength(1);
 
 
             int cellWidth =
-                pnlGrid.ClientSize.Width / columns;
+                pnlGrid.ClientSize.Width /
+                columns;
+
 
             int cellHeight =
-                pnlGrid.ClientSize.Height / rows;
+                pnlGrid.ClientSize.Height /
+                rows;
+
 
             int cellSize =
-                Math.Min(cellWidth, cellHeight);
+                Math.Min(
+                    cellWidth,
+                    cellHeight);
 
 
             int gridWidth =
                 cellSize * columns;
 
+
             int gridHeight =
                 cellSize * rows;
 
+
             int offsetX =
-                (pnlGrid.ClientSize.Width - gridWidth) / 2;
+                (pnlGrid.ClientSize.Width -
+                 gridWidth) / 2;
+
 
             int offsetY =
-                (pnlGrid.ClientSize.Height - gridHeight) / 2;
+                (pnlGrid.ClientSize.Height -
+                 gridHeight) / 2;
 
 
-            for (int row = 0; row < rows; row++)
+            for (int row = 0;
+                 row < rows;
+                 row++)
             {
-                for (int column = 0; column < columns; column++)
+                for (int column = 0;
+                     column < columns;
+                     column++)
                 {
-                    Label cell = new Label();
+                    Label cell =
+                        new Label();
+
 
                     cell.Size =
-                        new Size(cellSize, cellSize);
+                        new Size(
+                            cellSize,
+                            cellSize);
+
 
                     cell.Location =
                         new Point(
-                            offsetX + (column * cellSize),
-                            offsetY + (row * cellSize));
+                            offsetX +
+                            (column * cellSize),
+
+                            offsetY +
+                            (row * cellSize));
+
 
                     cell.BorderStyle =
                         BorderStyle.FixedSingle;
 
+
                     cell.TextAlign =
                         ContentAlignment.MiddleCenter;
+
 
                     cell.Font =
                         new Font(
                             "Segoe UI",
-                            Math.Max(8, cellSize / 4),
+                            Math.Max(
+                                8,
+                                cellSize / 4),
                             FontStyle.Bold);
 
 
-                    // Store the coordinate in Tag so we can find
-                    // the cell later when highlighting the path.
+                    // Store coordinate in Tag.
                     cell.Tag =
-                        new Coord(row, column);
+                        new Coord(
+                            row,
+                            column);
 
 
                     int terrain =
-                        currentMap[row, column];
+                        currentMap[
+                            row,
+                            column];
 
 
+                    // -------------------------------------------------
+                    // TERRAIN DISPLAY
+                    // -------------------------------------------------
                     switch (terrain)
                     {
                         case 0:
-                            cell.BackColor = Color.Black;
-                            cell.ForeColor = Color.White;
-                            cell.Text = "0";
+
+                            cell.BackColor =
+                                Color.Black;
+
+                            cell.ForeColor =
+                                Color.White;
+
+                            cell.Text =
+                                "0";
+
                             break;
+
 
                         case 1:
-                            cell.BackColor = Color.White;
-                            cell.ForeColor = Color.Black;
-                            cell.Text = "1";
+
+                            cell.BackColor =
+                                Color.White;
+
+                            cell.ForeColor =
+                                Color.Black;
+
+                            cell.Text =
+                                "1";
+
                             break;
+
 
                         case 2:
-                            cell.BackColor = Color.LightGreen;
-                            cell.ForeColor = Color.Black;
-                            cell.Text = "2";
+
+                            cell.BackColor =
+                                Color.LightGreen;
+
+                            cell.ForeColor =
+                                Color.Black;
+
+                            cell.Text =
+                                "2";
+
                             break;
+
 
                         case 3:
-                            cell.BackColor = Color.LightBlue;
-                            cell.ForeColor = Color.Black;
-                            cell.Text = "3";
+
+                            cell.BackColor =
+                                Color.LightBlue;
+
+                            cell.ForeColor =
+                                Color.Black;
+
+                            cell.Text =
+                                "3";
+
                             break;
+
 
                         default:
-                            cell.BackColor = Color.Gray;
-                            cell.ForeColor = Color.White;
-                            cell.Text = terrain.ToString();
+
+                            cell.BackColor =
+                                Color.Gray;
+
+                            cell.ForeColor =
+                                Color.White;
+
+                            cell.Text =
+                                terrain.ToString();
+
                             break;
                     }
 
 
-                    if (row == currentStart.Row &&
-                        column == currentStart.Col)
+                    // -------------------------------------------------
+                    // START
+                    // -------------------------------------------------
+                    if (row ==
+                        currentStart.Row &&
+                        column ==
+                        currentStart.Col)
                     {
-                        cell.BackColor = Color.LimeGreen;
-                        cell.ForeColor = Color.Black;
-                        cell.Text = "S";
+                        cell.BackColor =
+                            Color.LimeGreen;
+
+                        cell.ForeColor =
+                            Color.Black;
+
+                        cell.Text =
+                            "S";
                     }
 
 
-                    if (row == currentGoal.Row &&
-                        column == currentGoal.Col)
+                    // -------------------------------------------------
+                    // GOAL
+                    // -------------------------------------------------
+                    if (row ==
+                        currentGoal.Row &&
+                        column ==
+                        currentGoal.Col)
                     {
-                        cell.BackColor = Color.OrangeRed;
-                        cell.ForeColor = Color.White;
-                        cell.Text = "G";
+                        cell.BackColor =
+                            Color.OrangeRed;
+
+                        cell.ForeColor =
+                            Color.White;
+
+                        cell.Text =
+                            "G";
                     }
 
 
-                    pnlGrid.Controls.Add(cell);
+                    pnlGrid.Controls.Add(
+                        cell);
                 }
             }
         }
@@ -524,10 +758,13 @@ namespace PathFinderAssessment
         // -------------------------------------------------------------
         // RUN COMPLETE SEARCH
         // -------------------------------------------------------------
-        private void BtnRunSearch_Click(object? sender, EventArgs e)
+        private void BtnRunSearch_Click(
+            object? sender,
+            EventArgs e)
         {
             if (currentMap == null ||
-                string.IsNullOrWhiteSpace(currentMapFileName))
+                string.IsNullOrWhiteSpace(
+                    currentMapFileName))
             {
                 MessageBox.Show(
                     "Please load a map before running a search.",
@@ -541,7 +778,10 @@ namespace PathFinderAssessment
 
             try
             {
-                // Redraw the original map so a previous path is removed.
+                // Stop any previous step session.
+                ResetStepSearch();
+
+
                 DrawMap();
 
 
@@ -566,6 +806,7 @@ namespace PathFinderAssessment
                 lblStatus.Text =
                     $"Status: Running {algorithmName}...";
 
+
                 Application.DoEvents();
 
 
@@ -579,14 +820,17 @@ namespace PathFinderAssessment
 
                 if (pathFound)
                 {
-                    currentPath = path;
+                    currentPath =
+                        path;
 
 
-                    HighlightPath(path);
+                    HighlightPath(
+                        path);
 
 
                     lblStatus.Text =
                         $"Status: Path found using {algorithmName}";
+
 
                     lblPathLength.Text =
                         $"Path Length: {path.Count()}";
@@ -594,44 +838,65 @@ namespace PathFinderAssessment
 
                     txtResults.Clear();
 
-                    txtResults.AppendText(
-                        $"Algorithm: {algorithmName}{Environment.NewLine}");
 
                     txtResults.AppendText(
-                        $"Start: ({currentStart.Row}, {currentStart.Col}){Environment.NewLine}");
+                        $"Algorithm: {algorithmName}" +
+                        Environment.NewLine);
+
 
                     txtResults.AppendText(
-                        $"Goal: ({currentGoal.Row}, {currentGoal.Col}){Environment.NewLine}");
+                        $"Start: ({currentStart.Row}, {currentStart.Col})" +
+                        Environment.NewLine);
+
 
                     txtResults.AppendText(
-                        $"Path Length: {path.Count()}{Environment.NewLine}");
+                        $"Goal: ({currentGoal.Row}, {currentGoal.Col})" +
+                        Environment.NewLine);
+
 
                     txtResults.AppendText(
-                        $"{Environment.NewLine}Path:{Environment.NewLine}");
+                        $"Path Length: {path.Count()}" +
+                        Environment.NewLine);
 
 
-                    path.ForEach(coordinate =>
-                    {
-                        txtResults.AppendText(
-                            $"({coordinate.Row}, {coordinate.Col}){Environment.NewLine}");
-                    });
+                    txtResults.AppendText(
+                        Environment.NewLine +
+                        "Path:" +
+                        Environment.NewLine);
+
+
+                    path.ForEach(
+                        coordinate =>
+                        {
+                            txtResults.AppendText(
+                                $"({coordinate.Row}, {coordinate.Col})" +
+                                Environment.NewLine);
+                        });
 
 
                     // -------------------------------------------------
                     // A* SORT COUNT
                     // -------------------------------------------------
-                    int? sortCount = null;
+                    int? sortCount =
+                        null;
+
 
                     if (pathFinder is AStar aStar)
                     {
                         sortCount =
                             aStar.OpenListSortCount;
 
+
                         lblSortCount.Text =
-                            $"A* Open List Sort Count: {aStar.OpenListSortCount}";
+                            $"A* Open List Sort Count: " +
+                            $"{aStar.OpenListSortCount}";
+
 
                         txtResults.AppendText(
-                            $"{Environment.NewLine}Open List sort count: {aStar.OpenListSortCount}{Environment.NewLine}");
+                            Environment.NewLine +
+                            $"Open List sort count: " +
+                            $"{aStar.OpenListSortCount}" +
+                            Environment.NewLine);
                     }
                     else
                     {
@@ -641,7 +906,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // WRITE RESULT FILE
+                    // WRITE OUTPUT FILE
                     // -------------------------------------------------
                     string outputFile =
                         PathWriter.WritePath(
@@ -652,14 +917,19 @@ namespace PathFinderAssessment
 
 
                     txtResults.AppendText(
-                        $"{Environment.NewLine}Output file:{Environment.NewLine}{outputFile}");
+                        Environment.NewLine +
+                        "Output file:" +
+                        Environment.NewLine +
+                        outputFile);
                 }
                 else
                 {
                     currentPath = null;
 
+
                     lblStatus.Text =
                         $"Status: No path found using {algorithmName}";
+
 
                     lblPathLength.Text =
                         "Path Length: 0";
@@ -668,7 +938,8 @@ namespace PathFinderAssessment
                     if (pathFinder is AStar aStar)
                     {
                         lblSortCount.Text =
-                            $"A* Open List Sort Count: {aStar.OpenListSortCount}";
+                            $"A* Open List Sort Count: " +
+                            $"{aStar.OpenListSortCount}";
                     }
                     else
                     {
@@ -679,20 +950,31 @@ namespace PathFinderAssessment
 
                     txtResults.Clear();
 
+
                     txtResults.AppendText(
-                        $"Algorithm: {algorithmName}{Environment.NewLine}");
+                        $"Algorithm: {algorithmName}" +
+                        Environment.NewLine);
+
 
                     txtResults.AppendText(
                         "No path could be found.");
                 }
+
+
+                // BFS step mode can start again after normal search.
+                btnStepSearch.Enabled =
+                    cmbAlgorithm.SelectedIndex == 0;
             }
             catch (Exception ex)
             {
                 lblStatus.Text =
                     "Status: Search failed";
 
+
                 MessageBox.Show(
-                    $"The search could not be completed.{Environment.NewLine}{Environment.NewLine}{ex.Message}",
+                    $"The search could not be completed." +
+                    $"{Environment.NewLine}{Environment.NewLine}" +
+                    ex.Message,
                     "Search Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -701,32 +983,92 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
+        // ALGORITHM SELECTION CHANGED
+        // -------------------------------------------------------------
+        private void CmbAlgorithm_SelectedIndexChanged(
+            object? sender,
+            EventArgs e)
+        {
+            ResetStepSearch();
+
+
+            if (currentMap != null)
+            {
+                // Remove any previous path/search colours.
+                DrawMap();
+
+
+                currentPath = null;
+
+
+                lblPathLength.Text =
+                    "Path Length: -";
+
+
+                lblSortCount.Text =
+                    "A* Open List Sort Count: -";
+
+
+                lblStatus.Text =
+                    $"Status: {currentMapFileName} loaded";
+            }
+
+
+            // For now, step visualisation is available for BFS only.
+            btnStepSearch.Enabled =
+                currentMap != null &&
+                cmbAlgorithm.SelectedIndex == 0;
+        }
+
+
+        // -------------------------------------------------------------
         // GET SELECTED ALGORITHM
         // -------------------------------------------------------------
         private Algorithm GetSelectedAlgorithm()
         {
-            switch (cmbAlgorithm.SelectedIndex)
+            switch (
+                cmbAlgorithm.SelectedIndex)
             {
                 case 0:
-                    return Algorithm.BreadthFirst;
+
+                    return
+                        Algorithm.BreadthFirst;
+
 
                 case 1:
-                    return Algorithm.DepthFirst;
+
+                    return
+                        Algorithm.DepthFirst;
+
 
                 case 2:
-                    return Algorithm.HillClimbing;
+
+                    return
+                        Algorithm.HillClimbing;
+
 
                 case 3:
-                    return Algorithm.BestFirst;
+
+                    return
+                        Algorithm.BestFirst;
+
 
                 case 4:
-                    return Algorithm.Dijkstras;
+
+                    return
+                        Algorithm.Dijkstras;
+
 
                 case 5:
-                    return Algorithm.AStar;
+
+                    return
+                        Algorithm.AStar;
+
 
                 default:
-                    return Algorithm.BreadthFirst;
+
+                    return
+                        Algorithm.BreadthFirst;
             }
         }
 
@@ -740,67 +1082,85 @@ namespace PathFinderAssessment
             switch (algorithm)
             {
                 case Algorithm.BreadthFirst:
-                    return "Breadth First Search";
+
+                    return
+                        "Breadth First Search";
+
 
                 case Algorithm.DepthFirst:
-                    return "Depth First Search";
+
+                    return
+                        "Depth First Search";
+
 
                 case Algorithm.HillClimbing:
-                    return "Hill Climbing Search";
+
+                    return
+                        "Hill Climbing Search";
+
 
                 case Algorithm.BestFirst:
-                    return "Best First Search";
+
+                    return
+                        "Best First Search";
+
 
                 case Algorithm.Dijkstras:
-                    return "Dijkstra's Search";
+
+                    return
+                        "Dijkstra's Search";
+
 
                 case Algorithm.AStar:
-                    return "A* Search";
+
+                    return
+                        "A* Search";
+
 
                 default:
-                    return "Unknown Search";
+
+                    return
+                        "Unknown Search";
             }
         }
 
 
         // -------------------------------------------------------------
-        // HIGHLIGHT PATH ON GRID
+        // HIGHLIGHT FINAL PATH
         // -------------------------------------------------------------
         private void HighlightPath(
             LinkedList<Coord> path)
         {
-            path.ForEach(coordinate =>
-            {
-                // Keep start and goal colours unchanged.
-                if ((coordinate.Row == currentStart.Row &&
-                     coordinate.Col == currentStart.Col) ||
-                    (coordinate.Row == currentGoal.Row &&
-                     coordinate.Col == currentGoal.Col))
+            path.ForEach(
+                coordinate =>
                 {
-                    return;
-                }
+                    // Keep start and goal colours.
+                    if (IsStartOrGoal(
+                        coordinate))
+                    {
+                        return;
+                    }
 
 
-                foreach (Control control in pnlGrid.Controls)
-                {
-                    if (control is Label cell &&
-                        cell.Tag is Coord cellCoordinate &&
-                        cellCoordinate.Row == coordinate.Row &&
-                        cellCoordinate.Col == coordinate.Col)
+                    Label? cell =
+                        FindGridCell(
+                            coordinate);
+
+
+                    if (cell != null)
                     {
                         cell.BackColor =
                             Color.Gold;
 
+
                         cell.ForeColor =
                             Color.Black;
 
+
                         cell.Text =
                             "P";
-
-                        break;
                     }
-                }
-            });
+                });
         }
 
 
@@ -811,8 +1171,453 @@ namespace PathFinderAssessment
             object? sender,
             EventArgs e)
         {
-            lblStatus.Text =
-                "Status: Step Search not implemented yet";
+            if (currentMap == null)
+            {
+                MessageBox.Show(
+                    "Please load a map before starting step search.",
+                    "No Map Loaded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                return;
+            }
+
+
+            // Currently only BFS supports stepping.
+            if (cmbAlgorithm.SelectedIndex != 0)
+            {
+                MessageBox.Show(
+                    "Step-by-step visualisation is currently available " +
+                    "for Breadth First Search only.",
+                    "Step Search",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                return;
+            }
+
+
+            try
+            {
+                // =====================================================
+                // FIRST CLICK - INITIALISE BFS
+                // =====================================================
+                if (!stepSearchStarted)
+                {
+                    PathFinderInterface pathFinder =
+                        PathFinderFactory.NewPathFinder(
+                            Algorithm.BreadthFirst);
+
+
+                    currentStepPathFinder =
+                        pathFinder as
+                        SteppablePathFinderInterface;
+
+
+                    if (currentStepPathFinder == null)
+                    {
+                        throw new InvalidOperationException(
+                            "Breadth First Search does not support " +
+                            "step-by-step execution.");
+                    }
+
+
+                    currentStepPathFinder.InitialiseStepSearch(
+                        currentMap,
+                        currentStart,
+                        currentGoal);
+
+
+                    stepSearchStarted =
+                        true;
+
+
+                    stepNumber =
+                        0;
+
+
+                    currentPath =
+                        null;
+
+
+                    DrawMap();
+
+
+                    lblPathLength.Text =
+                        "Path Length: -";
+
+
+                    txtResults.Clear();
+
+
+                    txtResults.AppendText(
+                        "Breadth First Search - Step Visualisation" +
+                        Environment.NewLine);
+
+
+                    txtResults.AppendText(
+                        "====================================" +
+                        Environment.NewLine);
+
+
+                    txtResults.AppendText(
+                        $"Start: ({currentStart.Row}, {currentStart.Col})" +
+                        Environment.NewLine);
+
+
+                    txtResults.AppendText(
+                        $"Goal: ({currentGoal.Row}, {currentGoal.Col})" +
+                        Environment.NewLine +
+                        Environment.NewLine);
+                }
+
+
+                // =====================================================
+                // EXECUTE ONE EXPANSION
+                // =====================================================
+                SearchStepResult result =
+                    currentStepPathFinder!.Step();
+
+
+                stepNumber++;
+
+
+                // Restore base terrain.
+                DrawMap();
+
+
+                // Overlay search state.
+                DrawSearchStep(
+                    result);
+
+
+                lblStatus.Text =
+                    $"Status: BFS Step {stepNumber}";
+
+
+                // =====================================================
+                // DISPLAY STEP INFORMATION
+                // =====================================================
+                txtResults.AppendText(
+                    $"Step {stepNumber}" +
+                    Environment.NewLine);
+
+
+                if (result.CurrentNode.HasValue)
+                {
+                    Coord current =
+                        result.CurrentNode.Value;
+
+
+                    txtResults.AppendText(
+                        $"Expanded: ({current.Row}, {current.Col})" +
+                        Environment.NewLine);
+                }
+
+
+                txtResults.AppendText(
+                    $"Open List: {result.OpenList.Count()}" +
+                    Environment.NewLine);
+
+
+                txtResults.AppendText(
+                    $"Closed List: {result.ClosedList.Count()}" +
+                    Environment.NewLine);
+
+
+                txtResults.AppendText(
+                    "------------------------------------" +
+                    Environment.NewLine);
+
+
+                txtResults.SelectionStart =
+                    txtResults.Text.Length;
+
+
+                txtResults.ScrollToCaret();
+
+
+                // =====================================================
+                // SEARCH FINISHED
+                // =====================================================
+                if (result.IsComplete)
+                {
+                    btnStepSearch.Enabled =
+                        false;
+
+
+                    if (result.PathFound &&
+                        result.Path != null)
+                    {
+                        currentPath =
+                            result.Path;
+
+
+                        // Final path is drawn over the
+                        // search visualisation.
+                        HighlightPath(
+                            result.Path);
+
+
+                        lblStatus.Text =
+                            $"Status: BFS completed in " +
+                            $"{stepNumber} steps";
+
+
+                        lblPathLength.Text =
+                            $"Path Length: {result.Path.Count()}";
+
+
+                        txtResults.AppendText(
+                            Environment.NewLine +
+                            "GOAL REACHED" +
+                            Environment.NewLine);
+
+
+                        txtResults.AppendText(
+                            $"Path Length: {result.Path.Count()}" +
+                            Environment.NewLine);
+
+
+                        txtResults.AppendText(
+                            Environment.NewLine +
+                            "Final Path:" +
+                            Environment.NewLine);
+
+
+                        result.Path.ForEach(
+                            coordinate =>
+                            {
+                                txtResults.AppendText(
+                                    $"({coordinate.Row}, {coordinate.Col})" +
+                                    Environment.NewLine);
+                            });
+
+
+                        // ---------------------------------------------
+                        // WRITE FINAL PATH FILE
+                        // ---------------------------------------------
+                        if (!string.IsNullOrWhiteSpace(
+                            currentMapFileName))
+                        {
+                            string outputFile =
+                                PathWriter.WritePath(
+                                    currentMapFileName,
+                                    "Breadth First Search",
+                                    result.Path);
+
+
+                            txtResults.AppendText(
+                                Environment.NewLine +
+                                "Output file:" +
+                                Environment.NewLine +
+                                outputFile);
+                        }
+                    }
+                    else
+                    {
+                        lblStatus.Text =
+                            "Status: BFS completed - no path found";
+
+
+                        lblPathLength.Text =
+                            "Path Length: 0";
+
+
+                        txtResults.AppendText(
+                            Environment.NewLine +
+                            "SEARCH COMPLETE - NO PATH FOUND" +
+                            Environment.NewLine);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lblStatus.Text =
+                    "Status: Step search failed";
+
+
+                MessageBox.Show(
+                    $"Step search could not be completed." +
+                    $"{Environment.NewLine}{Environment.NewLine}" +
+                    ex.Message,
+                    "Step Search Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // DRAW STEP-BY-STEP SEARCH STATE
+        // -------------------------------------------------------------
+        private void DrawSearchStep(
+            SearchStepResult result)
+        {
+            // =========================================================
+            // CLOSED LIST
+            // =========================================================
+            result.ClosedList.ForEach(
+                coordinate =>
+                {
+                    Label? cell =
+                        FindGridCell(
+                            coordinate);
+
+
+                    if (cell == null ||
+                        IsStartOrGoal(
+                            coordinate))
+                    {
+                        return;
+                    }
+
+
+                    cell.BackColor =
+                        Color.LightGray;
+
+
+                    cell.ForeColor =
+                        Color.Black;
+
+
+                    cell.Text =
+                        "C";
+                });
+
+
+            // =========================================================
+            // OPEN LIST
+            // =========================================================
+            result.OpenList.ForEach(
+                coordinate =>
+                {
+                    Label? cell =
+                        FindGridCell(
+                            coordinate);
+
+
+                    if (cell == null ||
+                        IsStartOrGoal(
+                            coordinate))
+                    {
+                        return;
+                    }
+
+
+                    cell.BackColor =
+                        Color.Khaki;
+
+
+                    cell.ForeColor =
+                        Color.Black;
+
+
+                    cell.Text =
+                        "O";
+                });
+
+
+            // =========================================================
+            // CURRENT EXPANDED NODE
+            // =========================================================
+            if (result.CurrentNode.HasValue)
+            {
+                Coord current =
+                    result.CurrentNode.Value;
+
+
+                Label? currentCell =
+                    FindGridCell(
+                        current);
+
+
+                if (currentCell != null &&
+                    !IsStartOrGoal(
+                        current))
+                {
+                    currentCell.BackColor =
+                        Color.Orange;
+
+
+                    currentCell.ForeColor =
+                        Color.Black;
+
+
+                    currentCell.Text =
+                        "X";
+                }
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // FIND GRID CELL BY COORDINATE
+        // -------------------------------------------------------------
+        private Label? FindGridCell(
+            Coord coordinate)
+        {
+            foreach (
+                Control control
+                in pnlGrid.Controls)
+            {
+                if (control is Label cell &&
+                    cell.Tag is Coord cellCoordinate &&
+                    cellCoordinate.Row ==
+                    coordinate.Row &&
+                    cellCoordinate.Col ==
+                    coordinate.Col)
+                {
+                    return cell;
+                }
+            }
+
+
+            return null;
+        }
+
+
+        // -------------------------------------------------------------
+        // CHECK WHETHER COORDINATE IS START OR GOAL
+        // -------------------------------------------------------------
+        private bool IsStartOrGoal(
+            Coord coordinate)
+        {
+            bool isStart =
+                coordinate.Row ==
+                currentStart.Row &&
+                coordinate.Col ==
+                currentStart.Col;
+
+
+            bool isGoal =
+                coordinate.Row ==
+                currentGoal.Row &&
+                coordinate.Col ==
+                currentGoal.Col;
+
+
+            return
+                isStart ||
+                isGoal;
+        }
+
+
+        // -------------------------------------------------------------
+        // RESET STEP SEARCH STATE
+        // -------------------------------------------------------------
+        private void ResetStepSearch()
+        {
+            currentStepPathFinder =
+                null;
+
+
+            stepSearchStarted =
+                false;
+
+
+            stepNumber =
+                0;
         }
 
 
@@ -823,32 +1628,53 @@ namespace PathFinderAssessment
             object? sender,
             EventArgs e)
         {
-            currentMap = null;
-            currentPath = null;
-            currentMapFileName = null;
+            ResetStepSearch();
+
+
+            currentMap =
+                null;
+
+
+            currentPath =
+                null;
+
+
+            currentMapFileName =
+                null;
+
 
             pnlGrid.Controls.Clear();
 
+
             txtResults.Clear();
+
 
             lblStatus.Text =
                 "Status: No map loaded";
 
+
             lblStart.Text =
                 "Start: -";
+
 
             lblGoal.Text =
                 "Goal: -";
 
+
             lblPathLength.Text =
                 "Path Length: -";
+
 
             lblSortCount.Text =
                 "A* Open List Sort Count: -";
 
-            btnRunSearch.Enabled = false;
 
-            btnStepSearch.Enabled = false;
+            btnRunSearch.Enabled =
+                false;
+
+
+            btnStepSearch.Enabled =
+                false;
         }
     }
 }
