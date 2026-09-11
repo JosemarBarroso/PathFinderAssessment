@@ -85,7 +85,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // CREATE ALL GUI CONTROLS
+        // CREATE GUI CONTROLS
         // -------------------------------------------------------------
         private void InitializeControls()
         {
@@ -181,14 +181,10 @@ namespace PathFinderAssessment
             cmbAlgorithm.Items.Add(
                 "A* Search");
 
-
-            // Default algorithm is BFS.
             cmbAlgorithm.SelectedIndex = 0;
-
 
             cmbAlgorithm.SelectedIndexChanged +=
                 CmbAlgorithm_SelectedIndexChanged;
-
 
             Controls.Add(cmbAlgorithm);
 
@@ -305,7 +301,7 @@ namespace PathFinderAssessment
 
 
             // =========================================================
-            // INFORMATION LABELS
+            // STATUS LABEL
             // =========================================================
             lblStatus =
                 new Label();
@@ -322,6 +318,9 @@ namespace PathFinderAssessment
             Controls.Add(lblStatus);
 
 
+            // =========================================================
+            // START LABEL
+            // =========================================================
             lblStart =
                 new Label();
 
@@ -337,6 +336,9 @@ namespace PathFinderAssessment
             Controls.Add(lblStart);
 
 
+            // =========================================================
+            // GOAL LABEL
+            // =========================================================
             lblGoal =
                 new Label();
 
@@ -352,6 +354,9 @@ namespace PathFinderAssessment
             Controls.Add(lblGoal);
 
 
+            // =========================================================
+            // PATH LENGTH LABEL
+            // =========================================================
             lblPathLength =
                 new Label();
 
@@ -367,6 +372,9 @@ namespace PathFinderAssessment
             Controls.Add(lblPathLength);
 
 
+            // =========================================================
+            // A* SORT COUNT LABEL
+            // =========================================================
             lblSortCount =
                 new Label();
 
@@ -520,12 +528,14 @@ namespace PathFinderAssessment
                 // 1 = DFS
                 // 2 = Hill Climbing
                 // 3 = Best First Search
+                // 4 = Dijkstra's Search
                 // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
                     cmbAlgorithm.SelectedIndex == 1 ||
                     cmbAlgorithm.SelectedIndex == 2 ||
-                    cmbAlgorithm.SelectedIndex == 3;
+                    cmbAlgorithm.SelectedIndex == 3 ||
+                    cmbAlgorithm.SelectedIndex == 4;
             }
             catch (Exception ex)
             {
@@ -654,7 +664,6 @@ namespace PathFinderAssessment
                             FontStyle.Bold);
 
 
-                    // Store coordinate in Tag for later lookup.
                     cell.Tag =
                         new Coord(
                             row,
@@ -668,7 +677,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // TERRAIN DISPLAY
+                    // TERRAIN TYPE
                     // -------------------------------------------------
                     switch (terrain)
                     {
@@ -811,7 +820,6 @@ namespace PathFinderAssessment
 
             try
             {
-                // Stop previous step-by-step search.
                 ResetStepSearch();
 
 
@@ -939,7 +947,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // WRITE RESULT FILE
+                    // WRITE OUTPUT FILE
                     // -------------------------------------------------
                     string outputFile =
                         PathWriter.WritePath(
@@ -997,13 +1005,19 @@ namespace PathFinderAssessment
 
                 // -----------------------------------------------------
                 // RE-ENABLE STEP SEARCH
-                // BFS, DFS, Hill Climbing and Best First Search
+                //
+                // BFS
+                // DFS
+                // Hill Climbing
+                // Best First
+                // Dijkstra
                 // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
                     cmbAlgorithm.SelectedIndex == 1 ||
                     cmbAlgorithm.SelectedIndex == 2 ||
-                    cmbAlgorithm.SelectedIndex == 3;
+                    cmbAlgorithm.SelectedIndex == 3 ||
+                    cmbAlgorithm.SelectedIndex == 4;
             }
             catch (Exception ex)
             {
@@ -1055,19 +1069,21 @@ namespace PathFinderAssessment
 
 
             // ---------------------------------------------------------
-            // Step-by-step visualisation currently supports:
+            // STEP VISUALISATION CURRENTLY SUPPORTS:
             //
             // BFS
             // DFS
             // Hill Climbing
             // Best First Search
+            // Dijkstra's Search
             // ---------------------------------------------------------
             btnStepSearch.Enabled =
                 currentMap != null &&
                 (cmbAlgorithm.SelectedIndex == 0 ||
                  cmbAlgorithm.SelectedIndex == 1 ||
                  cmbAlgorithm.SelectedIndex == 2 ||
-                 cmbAlgorithm.SelectedIndex == 3);
+                 cmbAlgorithm.SelectedIndex == 3 ||
+                 cmbAlgorithm.SelectedIndex == 4);
         }
 
 
@@ -1124,7 +1140,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // GET ALGORITHM DISPLAY NAME
+        // GET DISPLAY NAME
         // -------------------------------------------------------------
         private string GetAlgorithmName(
             Algorithm algorithm)
@@ -1184,7 +1200,6 @@ namespace PathFinderAssessment
             path.ForEach(
                 coordinate =>
                 {
-                    // Do not replace start or goal formatting.
                     if (IsStartOrGoal(
                         coordinate))
                     {
@@ -1234,22 +1249,24 @@ namespace PathFinderAssessment
 
 
             // ---------------------------------------------------------
-            // Currently implemented step algorithms:
+            // CURRENTLY IMPLEMENTED STEP ALGORITHMS:
             //
             // 0 = BFS
             // 1 = DFS
             // 2 = Hill Climbing
             // 3 = Best First Search
+            // 4 = Dijkstra's Search
             // ---------------------------------------------------------
             if (cmbAlgorithm.SelectedIndex != 0 &&
                 cmbAlgorithm.SelectedIndex != 1 &&
                 cmbAlgorithm.SelectedIndex != 2 &&
-                cmbAlgorithm.SelectedIndex != 3)
+                cmbAlgorithm.SelectedIndex != 3 &&
+                cmbAlgorithm.SelectedIndex != 4)
             {
                 MessageBox.Show(
                     "Step-by-step visualisation is currently available " +
                     "for Breadth First Search, Depth First Search, " +
-                    "Hill Climbing and Best First Search.",
+                    "Hill Climbing, Best First Search and Dijkstra's Search.",
                     "Step Search",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -1261,7 +1278,7 @@ namespace PathFinderAssessment
             try
             {
                 // -----------------------------------------------------
-                // Determine algorithm dynamically.
+                // SELECT SEARCH ALGORITHM
                 // -----------------------------------------------------
                 Algorithm selectedAlgorithm =
                     GetSelectedAlgorithm();
@@ -1350,7 +1367,7 @@ namespace PathFinderAssessment
 
 
                 // =====================================================
-                // EXECUTE EXACTLY ONE SEARCH EXPANSION
+                // EXECUTE EXACTLY ONE EXPANSION
                 // =====================================================
                 SearchStepResult result =
                     currentStepPathFinder!.Step();
@@ -1359,11 +1376,9 @@ namespace PathFinderAssessment
                 stepNumber++;
 
 
-                // Redraw original terrain.
                 DrawMap();
 
 
-                // Add Open, Closed and Current overlays.
                 DrawSearchStep(
                     result);
 
@@ -1430,7 +1445,6 @@ namespace PathFinderAssessment
                             result.Path;
 
 
-                        // Draw final path.
                         HighlightPath(
                             result.Path);
 
@@ -1526,7 +1540,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // DRAW STEP-BY-STEP SEARCH STATE
+        // DRAW STEP SEARCH STATE
         // -------------------------------------------------------------
         private void DrawSearchStep(
             SearchStepResult result)
@@ -1629,7 +1643,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // FIND GRID CELL BY COORDINATE
+        // FIND GRID CELL
         // -------------------------------------------------------------
         private Label? FindGridCell(
             Coord coordinate)
@@ -1655,7 +1669,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // CHECK WHETHER COORDINATE IS START OR GOAL
+        // IS START OR GOAL?
         // -------------------------------------------------------------
         private bool IsStartOrGoal(
             Coord coordinate)

@@ -4,61 +4,112 @@ using System;
 
 namespace PathFinderAssessment
 {
-    internal class Dijkstra : PathFinderInterface
+    internal class Dijkstra :
+        PathFinderInterface,
+        SteppablePathFinderInterface
     {
-        // Finds the lowest-cost path from start to goal
-        // using Dijkstra's Search.
+        // =============================================================
+        // STEP-BY-STEP SEARCH STATE
+        // =============================================================
+
+        private int[,]? stepMap;
+
+        private Coord stepStart;
+        private Coord stepGoal;
+
+        private PriorityQueue<SearchNode>? stepOpen;
+
+        private LinkedList<SearchNode>? stepClosed;
+
+        private LinkedList<Coord>? stepOpenCoordinates;
+        private LinkedList<Coord>? stepClosedCoordinates;
+
+        private bool stepInitialised;
+        private bool stepComplete;
+        private bool stepPathFound;
+
+        private LinkedList<Coord>? stepFinalPath;
+
+
+        // =============================================================
+        // NORMAL DIJKSTRA SEARCH
+        // =============================================================
+
         public bool FindPath(
             int[,] map,
             Coord start,
             Coord goal,
             ref LinkedList<Coord> path)
         {
-            // OPEN is ordered using accumulated path cost.
-            // Smaller Cost means higher priority.
+            // ---------------------------------------------------------
+            // OPEN
+            //
+            // Ordered by accumulated path cost.
+            // Lowest cost has highest priority.
+            // ---------------------------------------------------------
             PriorityQueue<SearchNode> open =
                 new PriorityQueue<SearchNode>(
                     (first, second) =>
-                        first.Cost.CompareTo(second.Cost)
+                        first.Cost.CompareTo(
+                            second.Cost)
                 );
 
 
-            // The start node has a path cost of zero
-            // and no predecessor.
-            SearchNode startNode = new SearchNode(
-                start,
-                0,
-                0,
-                null
-            );
+            // ---------------------------------------------------------
+            // CLOSED
+            //
+            // Stores nodes whose minimum cost has already been settled.
+            // ---------------------------------------------------------
+            LinkedList<SearchNode> closed =
+                new LinkedList<SearchNode>();
 
 
-            // Add the starting node to OPEN.
-            open.Enqueue(startNode);
+            // ---------------------------------------------------------
+            // START NODE
+            // ---------------------------------------------------------
+            SearchNode startNode =
+                new SearchNode(
+                    start,
+                    0,
+                    0,
+                    null);
 
 
-            // Continue searching until OPEN becomes empty.
+            open.Enqueue(
+                startNode);
+
+
+            // ---------------------------------------------------------
+            // SEARCH LOOP
+            // ---------------------------------------------------------
             while (!open.IsEmpty())
             {
-                // Remove the node with the smallest path cost.
-                SearchNode current = open.Dequeue();
+                // Remove cheapest node from OPEN.
+                SearchNode current =
+                    open.Dequeue();
 
 
-                // Check whether the goal has been reached.
-                if (current.Position.Row == goal.Row &&
-                    current.Position.Col == goal.Col)
+                // -----------------------------------------------------
+                // GOAL CHECK
+                // -----------------------------------------------------
+                if (current.Position.Row ==
+                    goal.Row &&
+                    current.Position.Col ==
+                    goal.Col)
                 {
                     path =
-                        SearchUtilities.buildPathList(current);
+                        SearchUtilities.buildPathList(
+                            current);
 
                     return true;
                 }
 
 
-                // Generate successors in normal order:
+                // -----------------------------------------------------
+                // GENERATE SUCCESSORS
                 //
                 // North → East → South → West
-
+                // -----------------------------------------------------
 
                 // NORTH
                 TryProcessSuccessor(
@@ -66,8 +117,8 @@ namespace PathFinderAssessment
                     current.Position.Row - 1,
                     current.Position.Col,
                     current,
-                    open
-                );
+                    open,
+                    closed);
 
 
                 // EAST
@@ -76,8 +127,8 @@ namespace PathFinderAssessment
                     current.Position.Row,
                     current.Position.Col + 1,
                     current,
-                    open
-                );
+                    open,
+                    closed);
 
 
                 // SOUTH
@@ -86,8 +137,8 @@ namespace PathFinderAssessment
                     current.Position.Row + 1,
                     current.Position.Col,
                     current,
-                    open
-                );
+                    open,
+                    closed);
 
 
                 // WEST
@@ -96,125 +147,568 @@ namespace PathFinderAssessment
                     current.Position.Row,
                     current.Position.Col - 1,
                     current,
-                    open
-                );
+                    open,
+                    closed);
+
+
+                // Current node is now settled.
+                closed.PushBack(
+                    current);
             }
 
 
-            // No route to the goal was found.
-            path = new LinkedList<Coord>();
+            // No path found.
+            path =
+                new LinkedList<Coord>();
+
 
             return false;
         }
 
 
-        // -------------------------------------------------------------
-        // Processes one possible successor.
-        // -------------------------------------------------------------
+        // =============================================================
+        // NORMAL DIJKSTRA SUCCESSOR PROCESSING
+        // =============================================================
+
         private void TryProcessSuccessor(
             int[,] map,
             int row,
             int col,
             SearchNode current,
-            PriorityQueue<SearchNode> open)
+            PriorityQueue<SearchNode> open,
+            LinkedList<SearchNode> closed)
         {
-            // Ignore coordinates outside the map.
-            if (!IsInsideMap(map, row, col))
+            // Outside terrain.
+            if (!IsInsideMap(
+                map,
+                row,
+                col))
             {
                 return;
             }
 
 
-            // Terrain value 0 is not traversable.
-            if (map[row, col] == 0)
+            // Terrain 0 is blocked.
+            if (map[
+                row,
+                col] == 0)
+            {
+                return;
+            }
+
+
+            // ---------------------------------------------------------
+            // DO NOT REOPEN A CLOSED NODE
+            //
+            // With non-negative terrain costs, once Dijkstra removes
+            // a node from OPEN, its cheapest cost has been settled.
+            // ---------------------------------------------------------
+            SearchNode? closedNode =
+                closed.Find(
+                    node =>
+                        node.Position.Row == row &&
+                        node.Position.Col == col);
+
+
+            if (closedNode != null)
             {
                 return;
             }
 
 
             Coord successorPosition =
-                new Coord(row, col);
+                new Coord(
+                    row,
+                    col);
 
 
-            // The cost of entering the successor cell is
-            // determined by its terrain value:
-            //
-            // 1 = open terrain
-            // 2 = wood
-            // 3 = water
-            int movementCost = map[row, col];
+            // Cost of entering the successor terrain.
+            int movementCost =
+                map[
+                    row,
+                    col];
 
 
-            // Dijkstra:
-            //
-            // newCost =
-            // current cost + cost of moving to successor.
             int newCost =
-                current.Cost + movementCost;
+                current.Cost +
+                movementCost;
 
 
-            // Look for this coordinate already on OPEN.
+            // ---------------------------------------------------------
+            // CHECK WHETHER SUCCESSOR IS ALREADY IN OPEN
+            // ---------------------------------------------------------
             SearchNode? existingNode =
-                open.Find(node =>
-                    node.Position.Row == row &&
-                    node.Position.Col == col
-                );
+                open.Find(
+                    node =>
+                        node.Position.Row == row &&
+                        node.Position.Col == col);
 
 
-            // ---------------------------------------------------------
-            // If the successor already exists on OPEN:
-            // ---------------------------------------------------------
             if (existingNode != null)
             {
-                // If the existing route is already as cheap
-                // or cheaper, ignore the new route.
-                if (newCost >= existingNode.Cost)
+                // Existing route is already cheaper or equal.
+                if (newCost >=
+                    existingNode.Cost)
                 {
                     return;
                 }
 
 
-                // A cheaper route has been found.
+                // -----------------------------------------------------
+                // CHEAPER ROUTE FOUND
                 //
-                // Remove the existing node before changing its cost
-                // because its position in the PriorityQueue was based
-                // on the old value.
-                open.Remove(existingNode);
+                // Remove before updating because the current queue
+                // position was based on the old cost.
+                // -----------------------------------------------------
+                open.Remove(
+                    existingNode);
 
 
-                // Update the existing SearchNode.
-                existingNode.Cost = newCost;
-                existingNode.Predecessor = current;
+                existingNode.Cost =
+                    newCost;
 
 
-                // Reinsert it so OPEN is correctly ordered again.
-                open.Enqueue(existingNode);
+                existingNode.Predecessor =
+                    current;
+
+
+                // Reinsert so queue order is recalculated.
+                open.Enqueue(
+                    existingNode);
+
 
                 return;
             }
 
 
             // ---------------------------------------------------------
-            // The coordinate is not currently on OPEN.
-            // Create a new SearchNode.
+            // NEW SUCCESSOR
             // ---------------------------------------------------------
             SearchNode successor =
                 new SearchNode(
                     successorPosition,
                     newCost,
                     0,
-                    current
-                );
+                    current);
 
 
-            // Add it to OPEN according to accumulated cost.
-            open.Enqueue(successor);
+            open.Enqueue(
+                successor);
         }
 
 
-        // -------------------------------------------------------------
-        // Checks map boundaries.
-        // -------------------------------------------------------------
+        // =============================================================
+        // INITIALISE STEP-BY-STEP DIJKSTRA SEARCH
+        // =============================================================
+
+        public void InitialiseStepSearch(
+            int[,] map,
+            Coord start,
+            Coord goal)
+        {
+            stepMap =
+                map;
+
+
+            stepStart =
+                start;
+
+
+            stepGoal =
+                goal;
+
+
+            stepOpen =
+                new PriorityQueue<SearchNode>(
+                    (first, second) =>
+                        first.Cost.CompareTo(
+                            second.Cost)
+                );
+
+
+            stepClosed =
+                new LinkedList<SearchNode>();
+
+
+            stepOpenCoordinates =
+                new LinkedList<Coord>();
+
+
+            stepClosedCoordinates =
+                new LinkedList<Coord>();
+
+
+            SearchNode startNode =
+                new SearchNode(
+                    start,
+                    0,
+                    0,
+                    null);
+
+
+            stepOpen.Enqueue(
+                startNode);
+
+
+            stepOpenCoordinates.PushBack(
+                start);
+
+
+            stepInitialised =
+                true;
+
+
+            stepComplete =
+                false;
+
+
+            stepPathFound =
+                false;
+
+
+            stepFinalPath =
+                null;
+        }
+
+
+        // =============================================================
+        // EXECUTE ONE DIJKSTRA EXPANSION
+        // =============================================================
+
+        public SearchStepResult Step()
+        {
+            if (!stepInitialised ||
+                stepMap == null ||
+                stepOpen == null ||
+                stepClosed == null ||
+                stepOpenCoordinates == null ||
+                stepClosedCoordinates == null)
+            {
+                throw new InvalidOperationException(
+                    "Step search has not been initialised.");
+            }
+
+
+            // ---------------------------------------------------------
+            // SEARCH ALREADY FINISHED
+            // ---------------------------------------------------------
+            if (stepComplete)
+            {
+                return new SearchStepResult(
+                    null,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    stepPathFound,
+                    stepFinalPath);
+            }
+
+
+            // ---------------------------------------------------------
+            // OPEN EMPTY
+            // ---------------------------------------------------------
+            if (stepOpen.IsEmpty())
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    false;
+
+
+                return new SearchStepResult(
+                    null,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    false,
+                    null);
+            }
+
+
+            // ---------------------------------------------------------
+            // REMOVE CHEAPEST NODE
+            // ---------------------------------------------------------
+            SearchNode current =
+                stepOpen.Dequeue();
+
+
+            stepOpenCoordinates.Remove(
+                current.Position);
+
+
+            // ---------------------------------------------------------
+            // GOAL CHECK
+            // ---------------------------------------------------------
+            if (current.Position.Row ==
+                stepGoal.Row &&
+                current.Position.Col ==
+                stepGoal.Col)
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    true;
+
+
+                stepFinalPath =
+                    SearchUtilities.buildPathList(
+                        current);
+
+
+                return new SearchStepResult(
+                    current.Position,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    true,
+                    stepFinalPath);
+            }
+
+
+            // ---------------------------------------------------------
+            // GENERATE SUCCESSORS
+            //
+            // North → East → South → West
+            // ---------------------------------------------------------
+
+            // NORTH
+            TryProcessStepSuccessor(
+                current.Position.Row - 1,
+                current.Position.Col,
+                current);
+
+
+            // EAST
+            TryProcessStepSuccessor(
+                current.Position.Row,
+                current.Position.Col + 1,
+                current);
+
+
+            // SOUTH
+            TryProcessStepSuccessor(
+                current.Position.Row + 1,
+                current.Position.Col,
+                current);
+
+
+            // WEST
+            TryProcessStepSuccessor(
+                current.Position.Row,
+                current.Position.Col - 1,
+                current);
+
+
+            // ---------------------------------------------------------
+            // MOVE CURRENT TO CLOSED
+            // ---------------------------------------------------------
+            stepClosed.PushBack(
+                current);
+
+
+            stepClosedCoordinates.PushBack(
+                current.Position);
+
+
+            // ---------------------------------------------------------
+            // SEARCH FAILURE CHECK
+            // ---------------------------------------------------------
+            if (stepOpen.IsEmpty())
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    false;
+            }
+
+
+            return new SearchStepResult(
+                current.Position,
+                CopyCoordinateList(
+                    stepOpenCoordinates),
+                CopyCoordinateList(
+                    stepClosedCoordinates),
+                stepComplete,
+                stepPathFound,
+                stepFinalPath);
+        }
+
+
+        // =============================================================
+        // STEP SUCCESSOR PROCESSING
+        // =============================================================
+
+        private void TryProcessStepSuccessor(
+            int row,
+            int col,
+            SearchNode current)
+        {
+            if (stepMap == null ||
+                stepOpen == null ||
+                stepClosed == null ||
+                stepOpenCoordinates == null)
+            {
+                return;
+            }
+
+
+            // Outside terrain.
+            if (!IsInsideMap(
+                stepMap,
+                row,
+                col))
+            {
+                return;
+            }
+
+
+            // Blocked terrain.
+            if (stepMap[
+                row,
+                col] == 0)
+            {
+                return;
+            }
+
+
+            // ---------------------------------------------------------
+            // CLOSED CHECK
+            // ---------------------------------------------------------
+            SearchNode? closedNode =
+                stepClosed.Find(
+                    node =>
+                        node.Position.Row == row &&
+                        node.Position.Col == col);
+
+
+            if (closedNode != null)
+            {
+                return;
+            }
+
+
+            int movementCost =
+                stepMap[
+                    row,
+                    col];
+
+
+            int newCost =
+                current.Cost +
+                movementCost;
+
+
+            // ---------------------------------------------------------
+            // OPEN CHECK
+            // ---------------------------------------------------------
+            SearchNode? existingNode =
+                stepOpen.Find(
+                    node =>
+                        node.Position.Row == row &&
+                        node.Position.Col == col);
+
+
+            if (existingNode != null)
+            {
+                // Existing route is already as good or better.
+                if (newCost >=
+                    existingNode.Cost)
+                {
+                    return;
+                }
+
+
+                // -----------------------------------------------------
+                // CHEAPER ROUTE FOUND
+                // -----------------------------------------------------
+                stepOpen.Remove(
+                    existingNode);
+
+
+                existingNode.Cost =
+                    newCost;
+
+
+                existingNode.Predecessor =
+                    current;
+
+
+                // Reinsert according to updated cost.
+                stepOpen.Enqueue(
+                    existingNode);
+
+
+                // The coordinate is already present in the GUI OPEN
+                // coordinate list, so no extra coordinate is added.
+                return;
+            }
+
+
+            // ---------------------------------------------------------
+            // NEW SUCCESSOR
+            // ---------------------------------------------------------
+            Coord successorPosition =
+                new Coord(
+                    row,
+                    col);
+
+
+            SearchNode successor =
+                new SearchNode(
+                    successorPosition,
+                    newCost,
+                    0,
+                    current);
+
+
+            stepOpen.Enqueue(
+                successor);
+
+
+            stepOpenCoordinates.PushBack(
+                successorPosition);
+        }
+
+
+        // =============================================================
+        // COPY COORDINATE LIST
+        // =============================================================
+
+        private LinkedList<Coord> CopyCoordinateList(
+            LinkedList<Coord> source)
+        {
+            LinkedList<Coord> copy =
+                new LinkedList<Coord>();
+
+
+            source.ForEach(
+                coordinate =>
+                {
+                    copy.PushBack(
+                        coordinate);
+                });
+
+
+            return copy;
+        }
+
+
+        // =============================================================
+        // CHECK MAP BOUNDARIES
+        // =============================================================
+
         private bool IsInsideMap(
             int[,] map,
             int row,
