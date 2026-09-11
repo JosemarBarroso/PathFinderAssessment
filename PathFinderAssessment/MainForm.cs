@@ -38,6 +38,11 @@ namespace PathFinderAssessment
         private Coord currentStart;
         private Coord currentGoal;
 
+        private string? currentMapFileName;
+
+        // Stores the result of the most recent search.
+        private LinkedList<Coord>? currentPath;
+
 
         // -------------------------------------------------------------
         // CONSTRUCTOR
@@ -179,7 +184,6 @@ namespace PathFinderAssessment
             btnStepSearch.Location = new Point(850, 15);
             btnStepSearch.Size = new Size(100, 30);
 
-            // Step-by-step search will be implemented later.
             btnStepSearch.Enabled = false;
 
             btnStepSearch.Click += BtnStepSearch_Click;
@@ -286,7 +290,6 @@ namespace PathFinderAssessment
         {
             try
             {
-                // Get the map selected by the user.
                 string? selectedMap =
                     cmbMap.SelectedItem?.ToString();
 
@@ -302,7 +305,8 @@ namespace PathFinderAssessment
                 }
 
 
-                // Build the path to the Maps folder.
+                currentMapFileName = selectedMap;
+
                 string mapFilePath =
                     Path.Combine(
                         AppContext.BaseDirectory,
@@ -310,7 +314,6 @@ namespace PathFinderAssessment
                         selectedMap);
 
 
-                // Load the map using the existing MapLoader class.
                 currentMap =
                     MapLoader.LoadMap(
                         mapFilePath,
@@ -318,11 +321,11 @@ namespace PathFinderAssessment
                         out currentGoal);
 
 
-                // Draw the terrain.
+                currentPath = null;
+
                 DrawMap();
 
 
-                // Update information displayed on the right.
                 lblStatus.Text =
                     $"Status: {selectedMap} loaded";
 
@@ -357,10 +360,9 @@ namespace PathFinderAssessment
                     $"Goal: ({currentGoal.Row}, {currentGoal.Col}){Environment.NewLine}");
 
 
-                // A map is now available, so a complete search can run.
                 btnRunSearch.Enabled = true;
 
-                // We will enable this when incremental search is implemented.
+                // Step mode comes later.
                 btnStepSearch.Enabled = false;
             }
             catch (Exception ex)
@@ -391,7 +393,6 @@ namespace PathFinderAssessment
             }
 
 
-            // Remove any previously displayed map.
             pnlGrid.Controls.Clear();
 
 
@@ -402,8 +403,6 @@ namespace PathFinderAssessment
                 currentMap.GetLength(1);
 
 
-            // Calculate a square cell size dynamically.
-            // This allows maps of different dimensions to fit the panel.
             int cellWidth =
                 pnlGrid.ClientSize.Width / columns;
 
@@ -414,7 +413,6 @@ namespace PathFinderAssessment
                 Math.Min(cellWidth, cellHeight);
 
 
-            // Centre the grid inside the panel.
             int gridWidth =
                 cellSize * columns;
 
@@ -428,13 +426,11 @@ namespace PathFinderAssessment
                 (pnlGrid.ClientSize.Height - gridHeight) / 2;
 
 
-            // Create one Label for each map coordinate.
             for (int row = 0; row < rows; row++)
             {
                 for (int column = 0; column < columns; column++)
                 {
-                    Label cell =
-                        new Label();
+                    Label cell = new Label();
 
                     cell.Size =
                         new Size(cellSize, cellSize);
@@ -457,37 +453,36 @@ namespace PathFinderAssessment
                             FontStyle.Bold);
 
 
+                    // Store the coordinate in Tag so we can find
+                    // the cell later when highlighting the path.
+                    cell.Tag =
+                        new Coord(row, column);
+
+
                     int terrain =
                         currentMap[row, column];
 
 
-                    // -------------------------------------------------
-                    // TERRAIN APPEARANCE
-                    // -------------------------------------------------
                     switch (terrain)
                     {
-                        // Wall / non-traversable
                         case 0:
                             cell.BackColor = Color.Black;
                             cell.ForeColor = Color.White;
                             cell.Text = "0";
                             break;
 
-                        // Open terrain - cost 1
                         case 1:
                             cell.BackColor = Color.White;
                             cell.ForeColor = Color.Black;
                             cell.Text = "1";
                             break;
 
-                        // Woodland - cost 2
                         case 2:
                             cell.BackColor = Color.LightGreen;
                             cell.ForeColor = Color.Black;
                             cell.Text = "2";
                             break;
 
-                        // Water - cost 3
                         case 3:
                             cell.BackColor = Color.LightBlue;
                             cell.ForeColor = Color.Black;
@@ -502,9 +497,6 @@ namespace PathFinderAssessment
                     }
 
 
-                    // -------------------------------------------------
-                    // START POSITION
-                    // -------------------------------------------------
                     if (row == currentStart.Row &&
                         column == currentStart.Col)
                     {
@@ -514,9 +506,6 @@ namespace PathFinderAssessment
                     }
 
 
-                    // -------------------------------------------------
-                    // GOAL POSITION
-                    // -------------------------------------------------
                     if (row == currentGoal.Row &&
                         column == currentGoal.Col)
                     {
@@ -537,33 +526,306 @@ namespace PathFinderAssessment
         // -------------------------------------------------------------
         private void BtnRunSearch_Click(object? sender, EventArgs e)
         {
-            // We will connect the existing search algorithms
-            // in the next stage.
+            if (currentMap == null ||
+                string.IsNullOrWhiteSpace(currentMapFileName))
+            {
+                MessageBox.Show(
+                    "Please load a map before running a search.",
+                    "No Map Loaded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
 
-            lblStatus.Text =
-                "Status: Run Search clicked";
+                return;
+            }
+
+
+            try
+            {
+                // Redraw the original map so a previous path is removed.
+                DrawMap();
+
+
+                Algorithm selectedAlgorithm =
+                    GetSelectedAlgorithm();
+
+
+                PathFinderInterface pathFinder =
+                    PathFinderFactory.NewPathFinder(
+                        selectedAlgorithm);
+
+
+                LinkedList<Coord> path =
+                    new LinkedList<Coord>();
+
+
+                string algorithmName =
+                    GetAlgorithmName(
+                        selectedAlgorithm);
+
+
+                lblStatus.Text =
+                    $"Status: Running {algorithmName}...";
+
+                Application.DoEvents();
+
+
+                bool pathFound =
+                    pathFinder.FindPath(
+                        currentMap,
+                        currentStart,
+                        currentGoal,
+                        ref path);
+
+
+                if (pathFound)
+                {
+                    currentPath = path;
+
+
+                    HighlightPath(path);
+
+
+                    lblStatus.Text =
+                        $"Status: Path found using {algorithmName}";
+
+                    lblPathLength.Text =
+                        $"Path Length: {path.Count()}";
+
+
+                    txtResults.Clear();
+
+                    txtResults.AppendText(
+                        $"Algorithm: {algorithmName}{Environment.NewLine}");
+
+                    txtResults.AppendText(
+                        $"Start: ({currentStart.Row}, {currentStart.Col}){Environment.NewLine}");
+
+                    txtResults.AppendText(
+                        $"Goal: ({currentGoal.Row}, {currentGoal.Col}){Environment.NewLine}");
+
+                    txtResults.AppendText(
+                        $"Path Length: {path.Count()}{Environment.NewLine}");
+
+                    txtResults.AppendText(
+                        $"{Environment.NewLine}Path:{Environment.NewLine}");
+
+
+                    path.ForEach(coordinate =>
+                    {
+                        txtResults.AppendText(
+                            $"({coordinate.Row}, {coordinate.Col}){Environment.NewLine}");
+                    });
+
+
+                    // -------------------------------------------------
+                    // A* SORT COUNT
+                    // -------------------------------------------------
+                    int? sortCount = null;
+
+                    if (pathFinder is AStar aStar)
+                    {
+                        sortCount =
+                            aStar.OpenListSortCount;
+
+                        lblSortCount.Text =
+                            $"A* Open List Sort Count: {aStar.OpenListSortCount}";
+
+                        txtResults.AppendText(
+                            $"{Environment.NewLine}Open List sort count: {aStar.OpenListSortCount}{Environment.NewLine}");
+                    }
+                    else
+                    {
+                        lblSortCount.Text =
+                            "A* Open List Sort Count: -";
+                    }
+
+
+                    // -------------------------------------------------
+                    // WRITE RESULT FILE
+                    // -------------------------------------------------
+                    string outputFile =
+                        PathWriter.WritePath(
+                            currentMapFileName,
+                            algorithmName,
+                            path,
+                            sortCount);
+
+
+                    txtResults.AppendText(
+                        $"{Environment.NewLine}Output file:{Environment.NewLine}{outputFile}");
+                }
+                else
+                {
+                    currentPath = null;
+
+                    lblStatus.Text =
+                        $"Status: No path found using {algorithmName}";
+
+                    lblPathLength.Text =
+                        "Path Length: 0";
+
+
+                    if (pathFinder is AStar aStar)
+                    {
+                        lblSortCount.Text =
+                            $"A* Open List Sort Count: {aStar.OpenListSortCount}";
+                    }
+                    else
+                    {
+                        lblSortCount.Text =
+                            "A* Open List Sort Count: -";
+                    }
+
+
+                    txtResults.Clear();
+
+                    txtResults.AppendText(
+                        $"Algorithm: {algorithmName}{Environment.NewLine}");
+
+                    txtResults.AppendText(
+                        "No path could be found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                lblStatus.Text =
+                    "Status: Search failed";
+
+                MessageBox.Show(
+                    $"The search could not be completed.{Environment.NewLine}{Environment.NewLine}{ex.Message}",
+                    "Search Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // GET SELECTED ALGORITHM
+        // -------------------------------------------------------------
+        private Algorithm GetSelectedAlgorithm()
+        {
+            switch (cmbAlgorithm.SelectedIndex)
+            {
+                case 0:
+                    return Algorithm.BreadthFirst;
+
+                case 1:
+                    return Algorithm.DepthFirst;
+
+                case 2:
+                    return Algorithm.HillClimbing;
+
+                case 3:
+                    return Algorithm.BestFirst;
+
+                case 4:
+                    return Algorithm.Dijkstras;
+
+                case 5:
+                    return Algorithm.AStar;
+
+                default:
+                    return Algorithm.BreadthFirst;
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // GET DISPLAY NAME FOR ALGORITHM
+        // -------------------------------------------------------------
+        private string GetAlgorithmName(
+            Algorithm algorithm)
+        {
+            switch (algorithm)
+            {
+                case Algorithm.BreadthFirst:
+                    return "Breadth First Search";
+
+                case Algorithm.DepthFirst:
+                    return "Depth First Search";
+
+                case Algorithm.HillClimbing:
+                    return "Hill Climbing Search";
+
+                case Algorithm.BestFirst:
+                    return "Best First Search";
+
+                case Algorithm.Dijkstras:
+                    return "Dijkstra's Search";
+
+                case Algorithm.AStar:
+                    return "A* Search";
+
+                default:
+                    return "Unknown Search";
+            }
+        }
+
+
+        // -------------------------------------------------------------
+        // HIGHLIGHT PATH ON GRID
+        // -------------------------------------------------------------
+        private void HighlightPath(
+            LinkedList<Coord> path)
+        {
+            path.ForEach(coordinate =>
+            {
+                // Keep start and goal colours unchanged.
+                if ((coordinate.Row == currentStart.Row &&
+                     coordinate.Col == currentStart.Col) ||
+                    (coordinate.Row == currentGoal.Row &&
+                     coordinate.Col == currentGoal.Col))
+                {
+                    return;
+                }
+
+
+                foreach (Control control in pnlGrid.Controls)
+                {
+                    if (control is Label cell &&
+                        cell.Tag is Coord cellCoordinate &&
+                        cellCoordinate.Row == coordinate.Row &&
+                        cellCoordinate.Col == coordinate.Col)
+                    {
+                        cell.BackColor =
+                            Color.Gold;
+
+                        cell.ForeColor =
+                            Color.Black;
+
+                        cell.Text =
+                            "P";
+
+                        break;
+                    }
+                }
+            });
         }
 
 
         // -------------------------------------------------------------
         // STEP SEARCH
         // -------------------------------------------------------------
-        private void BtnStepSearch_Click(object? sender, EventArgs e)
+        private void BtnStepSearch_Click(
+            object? sender,
+            EventArgs e)
         {
-            // Incremental search will be implemented after
-            // the normal Run Search function is working.
-
             lblStatus.Text =
-                "Status: Step Search clicked";
+                "Status: Step Search not implemented yet";
         }
 
 
         // -------------------------------------------------------------
         // RESET GUI
         // -------------------------------------------------------------
-        private void BtnReset_Click(object? sender, EventArgs e)
+        private void BtnReset_Click(
+            object? sender,
+            EventArgs e)
         {
             currentMap = null;
+            currentPath = null;
+            currentMapFileName = null;
 
             pnlGrid.Controls.Clear();
 
