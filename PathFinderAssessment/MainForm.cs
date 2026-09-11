@@ -519,11 +519,13 @@ namespace PathFinderAssessment
                 // 0 = BFS
                 // 1 = DFS
                 // 2 = Hill Climbing
+                // 3 = Best First Search
                 // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
                     cmbAlgorithm.SelectedIndex == 1 ||
-                    cmbAlgorithm.SelectedIndex == 2;
+                    cmbAlgorithm.SelectedIndex == 2 ||
+                    cmbAlgorithm.SelectedIndex == 3;
             }
             catch (Exception ex)
             {
@@ -995,12 +997,13 @@ namespace PathFinderAssessment
 
                 // -----------------------------------------------------
                 // RE-ENABLE STEP SEARCH
-                // BFS, DFS and Hill Climbing
+                // BFS, DFS, Hill Climbing and Best First Search
                 // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
                     cmbAlgorithm.SelectedIndex == 1 ||
-                    cmbAlgorithm.SelectedIndex == 2;
+                    cmbAlgorithm.SelectedIndex == 2 ||
+                    cmbAlgorithm.SelectedIndex == 3;
             }
             catch (Exception ex)
             {
@@ -1057,12 +1060,14 @@ namespace PathFinderAssessment
             // BFS
             // DFS
             // Hill Climbing
+            // Best First Search
             // ---------------------------------------------------------
             btnStepSearch.Enabled =
                 currentMap != null &&
                 (cmbAlgorithm.SelectedIndex == 0 ||
                  cmbAlgorithm.SelectedIndex == 1 ||
-                 cmbAlgorithm.SelectedIndex == 2);
+                 cmbAlgorithm.SelectedIndex == 2 ||
+                 cmbAlgorithm.SelectedIndex == 3);
         }
 
 
@@ -1234,15 +1239,17 @@ namespace PathFinderAssessment
             // 0 = BFS
             // 1 = DFS
             // 2 = Hill Climbing
+            // 3 = Best First Search
             // ---------------------------------------------------------
             if (cmbAlgorithm.SelectedIndex != 0 &&
                 cmbAlgorithm.SelectedIndex != 1 &&
-                cmbAlgorithm.SelectedIndex != 2)
+                cmbAlgorithm.SelectedIndex != 2 &&
+                cmbAlgorithm.SelectedIndex != 3)
             {
                 MessageBox.Show(
                     "Step-by-step visualisation is currently available " +
-                    "for Breadth First Search, Depth First Search " +
-                    "and Hill Climbing.",
+                    "for Breadth First Search, Depth First Search, " +
+                    "Hill Climbing and Best First Search.",
                     "Step Search",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
