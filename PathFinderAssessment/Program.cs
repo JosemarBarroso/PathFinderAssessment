@@ -17,7 +17,7 @@ namespace PathFinderAssessment
                 Console.WriteLine();
 
                 // -----------------------------------------------------
-                // STEP 1: Let the user select a terrain map.
+                // STEP 1: Select a terrain map.
                 // -----------------------------------------------------
                 string mapFileName = SelectMap();
 
@@ -27,20 +27,16 @@ namespace PathFinderAssessment
                     mapFileName);
 
                 Console.WriteLine();
-                Console.WriteLine(
-                    $"Loading map: {mapFileName}");
-
+                Console.WriteLine($"Loading map: {mapFileName}");
                 Console.WriteLine();
 
-
                 // -----------------------------------------------------
-                // STEP 2: Load map, start and goal coordinates.
+                // STEP 2: Load the map, start and goal coordinates.
                 // -----------------------------------------------------
                 int[,] map = MapLoader.LoadMap(
                     mapFile,
                     out Coord start,
                     out Coord goal);
-
 
                 Console.WriteLine(
                     $"Map Size : {map.GetLength(0)} x {map.GetLength(1)}");
@@ -53,38 +49,35 @@ namespace PathFinderAssessment
 
                 Console.WriteLine();
 
-
                 // -----------------------------------------------------
-                // STEP 3: Let the user select a search algorithm.
+                // STEP 3: Select a search algorithm.
                 // -----------------------------------------------------
                 Algorithm selectedAlgorithm =
                     SelectAlgorithm();
 
-
                 // -----------------------------------------------------
-                // STEP 4: Create the selected algorithm using
-                // PathFinderFactory.
+                // STEP 4: Create the selected pathfinding object
+                // through the factory.
                 // -----------------------------------------------------
                 PathFinderInterface pathFinder =
                     PathFinderFactory.NewPathFinder(
                         selectedAlgorithm);
 
-
-                // Custom LinkedList used to store the final path.
+                // Custom LinkedList that will contain
+                // the final route.
                 LinkedList<Coord> path =
                     new LinkedList<Coord>();
 
+                string algorithmName =
+                    GetAlgorithmName(selectedAlgorithm);
 
                 Console.WriteLine();
-
                 Console.WriteLine(
-                    $"Running {GetAlgorithmName(selectedAlgorithm)}...");
-
+                    $"Running {algorithmName}...");
                 Console.WriteLine();
-
 
                 // -----------------------------------------------------
-                // STEP 5: Execute the search.
+                // STEP 5: Execute the selected search algorithm.
                 // -----------------------------------------------------
                 bool pathFound = pathFinder.FindPath(
                     map,
@@ -92,9 +85,8 @@ namespace PathFinderAssessment
                     goal,
                     ref path);
 
-
                 // -----------------------------------------------------
-                // STEP 6: Display the search result.
+                // STEP 6: Display results.
                 // -----------------------------------------------------
                 if (pathFound)
                 {
@@ -105,7 +97,6 @@ namespace PathFinderAssessment
                         $"Number of coordinates in path: {path.Count()}");
 
                     Console.WriteLine();
-
                     Console.WriteLine("Path:");
 
                     // Display every coordinate from start to goal.
@@ -114,7 +105,6 @@ namespace PathFinderAssessment
                         Console.WriteLine(
                             $"({coordinate.Row}, {coordinate.Col})");
                     });
-
 
                     // -------------------------------------------------
                     // A* specific information.
@@ -126,15 +116,39 @@ namespace PathFinderAssessment
                         Console.WriteLine(
                             $"Open List sort count: {aStar.OpenListSortCount}");
                     }
+
+                    // -------------------------------------------------
+                    // STEP 7: Write the route to an output text file.
+                    // -------------------------------------------------
+                    int? sortCount = null;
+
+                    // A* additionally supplies its Open List
+                    // ordering count.
+                    if (pathFinder is AStar aStarResult)
+                    {
+                        sortCount =
+                            aStarResult.OpenListSortCount;
+                    }
+
+                    string outputFile =
+                        PathWriter.WritePath(
+                            mapFileName,
+                            algorithmName,
+                            path,
+                            sortCount);
+
+                    Console.WriteLine();
+
+                    Console.WriteLine(
+                        $"Path file created: {outputFile}");
                 }
                 else
                 {
                     Console.WriteLine(
                         "No path could be found between the start and goal.");
 
-
-                    // Display A* ordering information even if
-                    // no route is found.
+                    // Display A* specific information even
+                    // when no route is found.
                     if (pathFinder is AStar aStar)
                     {
                         Console.WriteLine();
@@ -144,9 +158,10 @@ namespace PathFinderAssessment
                     }
                 }
 
-
                 Console.WriteLine();
-                Console.WriteLine("Press any key to exit...");
+                Console.WriteLine(
+                    "Press any key to exit...");
+
                 Console.ReadKey();
             }
             catch (Exception ex)
@@ -156,7 +171,9 @@ namespace PathFinderAssessment
                 Console.WriteLine(ex.Message);
 
                 Console.WriteLine();
-                Console.WriteLine("Press any key to exit...");
+                Console.WriteLine(
+                    "Press any key to exit...");
+
                 Console.ReadKey();
             }
         }
@@ -169,8 +186,11 @@ namespace PathFinderAssessment
         {
             while (true)
             {
-                Console.WriteLine("Select Terrain Map:");
+                Console.WriteLine(
+                    "Select Terrain Map:");
+
                 Console.WriteLine();
+
                 Console.WriteLine("1. test1Map.txt");
                 Console.WriteLine("2. test2Map.txt");
                 Console.WriteLine("3. test3Map.txt");
@@ -180,10 +200,11 @@ namespace PathFinderAssessment
 
                 Console.WriteLine();
 
-                Console.Write("Enter map number (1-6): ");
+                Console.Write(
+                    "Enter map number (1-6): ");
 
-                string? input = Console.ReadLine();
-
+                string? input =
+                    Console.ReadLine();
 
                 switch (input)
                 {
@@ -207,6 +228,7 @@ namespace PathFinderAssessment
 
                     default:
                         Console.WriteLine();
+
                         Console.WriteLine(
                             "Invalid selection. Please enter a number from 1 to 6.");
 
@@ -224,23 +246,36 @@ namespace PathFinderAssessment
         {
             while (true)
             {
-                Console.WriteLine("Select Search Algorithm:");
+                Console.WriteLine(
+                    "Select Search Algorithm:");
+
                 Console.WriteLine();
 
-                Console.WriteLine("1. Breadth First Search");
-                Console.WriteLine("2. Depth First Search");
-                Console.WriteLine("3. Hill Climbing");
-                Console.WriteLine("4. Best First Search");
-                Console.WriteLine("5. Dijkstra's Search");
-                Console.WriteLine("6. A* Search");
+                Console.WriteLine(
+                    "1. Breadth First Search");
+
+                Console.WriteLine(
+                    "2. Depth First Search");
+
+                Console.WriteLine(
+                    "3. Hill Climbing");
+
+                Console.WriteLine(
+                    "4. Best First Search");
+
+                Console.WriteLine(
+                    "5. Dijkstra's Search");
+
+                Console.WriteLine(
+                    "6. A* Search");
 
                 Console.WriteLine();
 
                 Console.Write(
                     "Enter algorithm number (1-6): ");
 
-                string? input = Console.ReadLine();
-
+                string? input =
+                    Console.ReadLine();
 
                 switch (input)
                 {
@@ -264,6 +299,7 @@ namespace PathFinderAssessment
 
                     default:
                         Console.WriteLine();
+
                         Console.WriteLine(
                             "Invalid selection. Please enter a number from 1 to 6.");
 
@@ -275,7 +311,7 @@ namespace PathFinderAssessment
 
 
         // =============================================================
-        // Converts the Algorithm enum into a user-friendly name.
+        // Returns a user-friendly algorithm name.
         // =============================================================
         private static string GetAlgorithmName(
             Algorithm algorithm)
