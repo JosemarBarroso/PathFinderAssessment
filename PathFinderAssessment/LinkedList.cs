@@ -2,14 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace PathFinderAssessment
 {
-    // Generic linked list class
+    // Generic linked list class.
     public class LinkedList<T>
     {
         // Only LinkedLists should know about Elements,
@@ -30,276 +26,455 @@ namespace PathFinderAssessment
             }
         }
 
-        // The head element of the list.
-        // It will be null when the linked list is empty.
+
+        // -------------------------------------------------------------
+        // LINKED LIST STATE
+        // -------------------------------------------------------------
+
+        // First element in the list.
         private Element<T>? _head;
 
-        // Constructor
+        // Last element in the list.
+        //
+        // Keeping a tail reference allows PushBack()
+        // to run in constant time.
+        private Element<T>? _tail;
+
+        // Number of elements currently stored.
+        //
+        // Keeping a count avoids traversing the whole list
+        // every time Count() is requested.
+        private int _count;
+
+
+        // -------------------------------------------------------------
+        // CONSTRUCTOR
+        // -------------------------------------------------------------
         public LinkedList()
         {
             _head = null;
+            _tail = null;
+            _count = 0;
         }
 
-        // Returns true when the linked list contains no elements.
+
+        // -------------------------------------------------------------
+        // IS EMPTY
+        // -------------------------------------------------------------
+        // O(1)
         public bool IsEmpty()
         {
             return _head == null;
         }
 
-        // Adds a new item to the front of the linked list.
+
+        // -------------------------------------------------------------
+        // PUSH FRONT
+        // -------------------------------------------------------------
+        // O(1)
         public void PushFront(T data)
         {
-            // Create a new element containing the supplied data.
-            Element<T> newElement = new Element<T>(data);
+            Element<T> newElement =
+                new Element<T>(data);
 
-            // The new element points to the current head.
-            newElement.Next = _head;
+            newElement.Next =
+                _head;
 
-            // The new element now becomes the head of the list.
-            _head = newElement;
+            _head =
+                newElement;
+
+            // If this is the first element,
+            // it is both head and tail.
+            if (_tail == null)
+            {
+                _tail =
+                    newElement;
+            }
+
+            _count++;
         }
 
-        // Adds a new item to the end of the linked list.
+
+        // -------------------------------------------------------------
+        // PUSH BACK
+        // -------------------------------------------------------------
+        // O(1)
         public void PushBack(T data)
         {
-            // Create the new element.
-            Element<T> newElement = new Element<T>(data);
+            Element<T> newElement =
+                new Element<T>(data);
 
-            // If the list is empty, the new element becomes the head.
+            // Empty list.
             if (_head == null)
             {
-                _head = newElement;
+                _head =
+                    newElement;
+
+                _tail =
+                    newElement;
+
+                _count++;
+
                 return;
             }
 
-            // Otherwise, move through the list until the last element.
-            Element<T> currentElement = _head;
+            // Add directly after current tail.
+            _tail!.Next =
+                newElement;
 
-            while (currentElement.Next != null)
-            {
-                currentElement = currentElement.Next;
-            }
+            _tail =
+                newElement;
 
-            // Link the final element to the new element.
-            currentElement.Next = newElement;
+            _count++;
         }
 
-        // Removes and returns the first item in the linked list.
+
+        // -------------------------------------------------------------
+        // POP FRONT
+        // -------------------------------------------------------------
+        // O(1)
         public T PopFront()
         {
-            // A value cannot be removed from an empty list.
             if (_head == null)
             {
-                throw new InvalidOperationException("Cannot remove an item from an empty linked list.");
+                throw new InvalidOperationException(
+                    "Cannot remove an item from an empty linked list.");
             }
 
-            // Store the data from the current head.
-            T data = _head.Data;
+            T data =
+                _head.Data;
 
-            // Move the head to the next element.
-            _head = _head.Next;
+            _head =
+                _head.Next;
 
-            // Return the removed data.
+            _count--;
+
+            // If the list is now empty,
+            // the tail must also be cleared.
+            if (_head == null)
+            {
+                _tail =
+                    null;
+            }
+
             return data;
         }
 
-        // Removes and returns the last item in the linked list.
+
+        // -------------------------------------------------------------
+        // POP BACK
+        // -------------------------------------------------------------
+        // O(n) for a singly linked list.
         public T PopBack()
         {
-            // A value cannot be removed from an empty list.
             if (_head == null)
             {
-                throw new InvalidOperationException("Cannot remove an item from an empty linked list.");
+                throw new InvalidOperationException(
+                    "Cannot remove an item from an empty linked list.");
             }
 
-            // If there is only one element,
-            // store its data and make the list empty.
+            // Only one element.
             if (_head.Next == null)
             {
-                T data = _head.Data;
-                _head = null;
+                T data =
+                    _head.Data;
+
+                _head =
+                    null;
+
+                _tail =
+                    null;
+
+                _count =
+                    0;
+
                 return data;
             }
 
-            // Move through the list until currentElement
-            // is the element immediately before the final element.
-            Element<T> currentElement = _head;
+            // Find the element immediately before the tail.
+            Element<T> currentElement =
+                _head;
 
             while (currentElement.Next != null &&
                    currentElement.Next.Next != null)
             {
-                currentElement = currentElement.Next;
+                currentElement =
+                    currentElement.Next;
             }
 
-            // Store the data from the final element.
-            T lastData = currentElement.Next!.Data;
+            T lastData =
+                currentElement.Next!.Data;
 
-            // Remove the final element.
-            currentElement.Next = null;
+            currentElement.Next =
+                null;
 
-            // Return the removed data.
+            _tail =
+                currentElement;
+
+            _count--;
+
             return lastData;
         }
 
-        // Contains - returns true when data is contained in the list.
-        //
-        // NOTE:
-        // Because this is a generic LinkedList which can store ANY type,
-        // we should use EqualityComparer<T>.Default.Equals(...)
-        // instead of assuming the == operator is available.
+
+        // -------------------------------------------------------------
+        // CONTAINS
+        // -------------------------------------------------------------
+        // O(n)
         public bool Contains(T data)
         {
-            Element<T>? currentElement = _head;
-            bool found = false;
+            Element<T>? currentElement =
+                _head;
 
-            // Continue until either:
-            // 1. the item is found, or
-            // 2. the end of the list is reached.
-            while (currentElement != null && !found)
+            while (currentElement != null)
             {
-                if (EqualityComparer<T>.Default.Equals(currentElement.Data, data))
+                if (EqualityComparer<T>.Default.Equals(
+                    currentElement.Data,
+                    data))
                 {
-                    found = true;
+                    return true;
                 }
 
-                currentElement = currentElement.Next;
+                currentElement =
+                    currentElement.Next;
             }
 
-            return found;
+            return false;
         }
 
-        // Returns the number of elements currently stored in the list.
+
+        // -------------------------------------------------------------
+        // COUNT
+        // -------------------------------------------------------------
+        // O(1)
         public int Count()
         {
-            int count = 0;
-            Element<T>? currentElement = _head;
-
-            // Traverse the entire list.
-            while (currentElement != null)
-            {
-                count++;
-                currentElement = currentElement.Next;
-            }
-
-            return count;
+            return _count;
         }
 
-        // Removes all elements from the linked list.
+
+        // -------------------------------------------------------------
+        // CLEAR
+        // -------------------------------------------------------------
+        // O(1)
         public void Clear()
         {
-            // Removing the reference to the head makes the whole list
-            // unreachable, so the garbage collector can reclaim it.
-            _head = null;
+            _head =
+                null;
+
+            _tail =
+                null;
+
+            _count =
+                0;
         }
 
-        // Inserts an item into the linked list in sorted order.
-        //
-        // The Comparison<T> supplied by the caller decides
-        // which item should appear before another item.
-        public void InsertSorted(T data, Comparison<T> comparison)
-        {
-            // Create the new element.
-            Element<T> newElement = new Element<T>(data);
 
-            // If the list is empty, the new element becomes the head.
+        // -------------------------------------------------------------
+        // INSERT SORTED
+        // -------------------------------------------------------------
+        // O(n)
+        //
+        // Inserts an item in the position decided by comparison.
+        public void InsertSorted(
+            T data,
+            Comparison<T> comparison)
+        {
+            Element<T> newElement =
+                new Element<T>(data);
+
+
+            // ---------------------------------------------------------
+            // EMPTY LIST
+            // ---------------------------------------------------------
             if (_head == null)
             {
-                _head = newElement;
+                _head =
+                    newElement;
+
+                _tail =
+                    newElement;
+
+                _count++;
+
                 return;
             }
 
-            // If the new item should appear before the current head,
-            // insert it at the front.
-            if (comparison(data, _head.Data) < 0)
+
+            // ---------------------------------------------------------
+            // INSERT BEFORE HEAD
+            // ---------------------------------------------------------
+            if (comparison(
+                data,
+                _head.Data) < 0)
             {
-                newElement.Next = _head;
-                _head = newElement;
+                newElement.Next =
+                    _head;
+
+                _head =
+                    newElement;
+
+                _count++;
+
                 return;
             }
 
-            // Otherwise move through the list until the correct
-            // insertion position is found.
-            Element<T> currentElement = _head;
+
+            // ---------------------------------------------------------
+            // FIND INSERTION POSITION
+            // ---------------------------------------------------------
+            Element<T> currentElement =
+                _head;
 
             while (currentElement.Next != null &&
-                   comparison(data, currentElement.Next.Data) >= 0)
+                   comparison(
+                       data,
+                       currentElement.Next.Data) >= 0)
             {
-                currentElement = currentElement.Next;
+                currentElement =
+                    currentElement.Next;
             }
 
-            // Insert the new element into its sorted position.
-            newElement.Next = currentElement.Next;
-            currentElement.Next = newElement;
+
+            newElement.Next =
+                currentElement.Next;
+
+            currentElement.Next =
+                newElement;
+
+
+            // If inserted at the end,
+            // update the tail reference.
+            if (newElement.Next == null)
+            {
+                _tail =
+                    newElement;
+            }
+
+            _count++;
         }
 
-        // Finds and returns the first item that matches the supplied condition.
-        // Returns default if no matching item exists.
-        public T? Find(Predicate<T> condition)
+
+        // -------------------------------------------------------------
+        // FIND
+        // -------------------------------------------------------------
+        // O(n)
+        public T? Find(
+            Predicate<T> condition)
         {
-            Element<T>? currentElement = _head;
+            Element<T>? currentElement =
+                _head;
 
             while (currentElement != null)
             {
-                if (condition(currentElement.Data))
+                if (condition(
+                    currentElement.Data))
                 {
                     return currentElement.Data;
                 }
 
-                currentElement = currentElement.Next;
+                currentElement =
+                    currentElement.Next;
             }
 
             return default;
         }
 
 
+        // -------------------------------------------------------------
+        // REMOVE
+        // -------------------------------------------------------------
+        // O(n)
+        //
         // Removes the first occurrence of the supplied item.
-        // Returns true if the item was removed.
         public bool Remove(T data)
         {
-            // Nothing can be removed from an empty list.
+            // Empty list.
             if (_head == null)
             {
                 return false;
             }
 
-            // Check whether the head contains the item.
-            if (EqualityComparer<T>.Default.Equals(_head.Data, data))
+
+            // ---------------------------------------------------------
+            // REMOVE HEAD
+            // ---------------------------------------------------------
+            if (EqualityComparer<T>.Default.Equals(
+                _head.Data,
+                data))
             {
-                _head = _head.Next;
+                _head =
+                    _head.Next;
+
+                _count--;
+
+                if (_head == null)
+                {
+                    _tail =
+                        null;
+                }
+
                 return true;
             }
 
-            Element<T> currentElement = _head;
 
-            // Search for the element immediately before the item
-            // that needs to be removed.
+            // ---------------------------------------------------------
+            // SEARCH FOR ITEM
+            // ---------------------------------------------------------
+            Element<T> currentElement =
+                _head;
+
             while (currentElement.Next != null)
             {
                 if (EqualityComparer<T>.Default.Equals(
                     currentElement.Next.Data,
                     data))
                 {
-                    currentElement.Next = currentElement.Next.Next;
+                    Element<T> elementToRemove =
+                        currentElement.Next;
+
+                    currentElement.Next =
+                        elementToRemove.Next;
+
+
+                    // If the removed element was the tail,
+                    // the previous element becomes the new tail.
+                    if (elementToRemove == _tail)
+                    {
+                        _tail =
+                            currentElement;
+                    }
+
+                    _count--;
+
                     return true;
                 }
 
-                currentElement = currentElement.Next;
+                currentElement =
+                    currentElement.Next;
             }
 
             return false;
         }
 
-        // Performs an action for every item stored in the linked list.
-        // This is useful for displaying or writing path coordinates.
-        public void ForEach(Action<T> action)
+
+        // -------------------------------------------------------------
+        // FOR EACH
+        // -------------------------------------------------------------
+        // O(n)
+        public void ForEach(
+            Action<T> action)
         {
-            Element<T>? currentElement = _head;
+            Element<T>? currentElement =
+                _head;
 
             while (currentElement != null)
             {
-                action(currentElement.Data);
+                action(
+                    currentElement.Data);
 
-                currentElement = currentElement.Next;
+                currentElement =
+                    currentElement.Next;
             }
         }
     }

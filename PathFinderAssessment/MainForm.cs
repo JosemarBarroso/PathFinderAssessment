@@ -979,8 +979,16 @@ namespace PathFinderAssessment
                         "Path Length: 0";
 
 
+                    int? noPathSortCount =
+                        null;
+
+
                     if (pathFinder is AStar aStar)
                     {
+                        noPathSortCount =
+                            aStar.OpenListSortCount;
+
+
                         lblSortCount.Text =
                             $"A* Open List Sort Count: " +
                             $"{aStar.OpenListSortCount}";
@@ -992,6 +1000,17 @@ namespace PathFinderAssessment
                     }
 
 
+                    // -------------------------------------------------
+                    // WRITE EMPTY OUTPUT FILE FOR UNSUCCESSFUL SEARCH
+                    // -------------------------------------------------
+                    string noPathOutputFile =
+                        PathWriter.WritePath(
+                            currentMapFileName,
+                            algorithmName,
+                            path,
+                            noPathSortCount);
+
+
                     txtResults.Clear();
 
 
@@ -1001,7 +1020,12 @@ namespace PathFinderAssessment
 
 
                     txtResults.AppendText(
-                        "No path could be found.");
+                        "No path could be found." +
+                        Environment.NewLine +
+                        Environment.NewLine +
+                        "Output file:" +
+                        Environment.NewLine +
+                        noPathOutputFile);
                 }
 
 
@@ -1561,10 +1585,44 @@ namespace PathFinderAssessment
                             "Path Length: 0";
 
 
+                        // Create an empty path for the output file.
+                        LinkedList<Coord> emptyPath =
+                            new LinkedList<Coord>();
+
+
+                        // A* must still report its Open List sort count.
+                        int? sortCount =
+                            null;
+
+
+                        if (currentStepPathFinder is AStar noPathAStar)
+                        {
+                            sortCount =
+                                noPathAStar.OpenListSortCount;
+
+
+                            lblSortCount.Text =
+                                $"A* Open List Sort Count: " +
+                                $"{noPathAStar.OpenListSortCount}";
+                        }
+
+
+                        string outputFile =
+                            PathWriter.WritePath(
+                                currentMapFileName!,
+                                algorithmName,
+                                emptyPath,
+                                sortCount);
+
+
                         txtResults.AppendText(
                             Environment.NewLine +
                             "SEARCH COMPLETE - NO PATH FOUND" +
-                            Environment.NewLine);
+                            Environment.NewLine +
+                            Environment.NewLine +
+                            "Output file:" +
+                            Environment.NewLine +
+                            outputFile);
                     }
                 }
             }
