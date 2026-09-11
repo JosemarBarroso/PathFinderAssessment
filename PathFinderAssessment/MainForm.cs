@@ -513,12 +513,17 @@ namespace PathFinderAssessment
                     true;
 
 
-                // Step Search currently supports:
+                // -----------------------------------------------------
+                // STEP SEARCH SUPPORTED ALGORITHMS
+                //
                 // 0 = BFS
                 // 1 = DFS
+                // 2 = Hill Climbing
+                // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
-                    cmbAlgorithm.SelectedIndex == 1;
+                    cmbAlgorithm.SelectedIndex == 1 ||
+                    cmbAlgorithm.SelectedIndex == 2;
             }
             catch (Exception ex)
             {
@@ -647,8 +652,7 @@ namespace PathFinderAssessment
                             FontStyle.Bold);
 
 
-                    // Store coordinate in Tag so the same cell
-                    // can later be found for search visualisation.
+                    // Store coordinate in Tag for later lookup.
                     cell.Tag =
                         new Coord(
                             row,
@@ -662,7 +666,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // TERRAIN
+                    // TERRAIN DISPLAY
                     // -------------------------------------------------
                     switch (terrain)
                     {
@@ -805,7 +809,7 @@ namespace PathFinderAssessment
 
             try
             {
-                // Cancel any existing step session.
+                // Stop previous step-by-step search.
                 ResetStepSearch();
 
 
@@ -933,7 +937,7 @@ namespace PathFinderAssessment
 
 
                     // -------------------------------------------------
-                    // WRITE PATH OUTPUT FILE
+                    // WRITE RESULT FILE
                     // -------------------------------------------------
                     string outputFile =
                         PathWriter.WritePath(
@@ -989,10 +993,14 @@ namespace PathFinderAssessment
                 }
 
 
-                // Re-enable step search for BFS/DFS.
+                // -----------------------------------------------------
+                // RE-ENABLE STEP SEARCH
+                // BFS, DFS and Hill Climbing
+                // -----------------------------------------------------
                 btnStepSearch.Enabled =
                     cmbAlgorithm.SelectedIndex == 0 ||
-                    cmbAlgorithm.SelectedIndex == 1;
+                    cmbAlgorithm.SelectedIndex == 1 ||
+                    cmbAlgorithm.SelectedIndex == 2;
             }
             catch (Exception ex)
             {
@@ -1023,7 +1031,6 @@ namespace PathFinderAssessment
 
             if (currentMap != null)
             {
-                // Remove previous path/search colours.
                 DrawMap();
 
 
@@ -1044,12 +1051,18 @@ namespace PathFinderAssessment
             }
 
 
-            // Step visualisation currently supports:
-            // BFS and DFS.
+            // ---------------------------------------------------------
+            // Step-by-step visualisation currently supports:
+            //
+            // BFS
+            // DFS
+            // Hill Climbing
+            // ---------------------------------------------------------
             btnStepSearch.Enabled =
                 currentMap != null &&
                 (cmbAlgorithm.SelectedIndex == 0 ||
-                 cmbAlgorithm.SelectedIndex == 1);
+                 cmbAlgorithm.SelectedIndex == 1 ||
+                 cmbAlgorithm.SelectedIndex == 2);
         }
 
 
@@ -1106,7 +1119,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // GET DISPLAY NAME FOR ALGORITHM
+        // GET ALGORITHM DISPLAY NAME
         // -------------------------------------------------------------
         private string GetAlgorithmName(
             Algorithm algorithm)
@@ -1166,6 +1179,7 @@ namespace PathFinderAssessment
             path.ForEach(
                 coordinate =>
                 {
+                    // Do not replace start or goal formatting.
                     if (IsStartOrGoal(
                         coordinate))
                     {
@@ -1214,14 +1228,21 @@ namespace PathFinderAssessment
             }
 
 
-            // Currently BFS and DFS implement the
-            // SteppablePathFinderInterface.
+            // ---------------------------------------------------------
+            // Currently implemented step algorithms:
+            //
+            // 0 = BFS
+            // 1 = DFS
+            // 2 = Hill Climbing
+            // ---------------------------------------------------------
             if (cmbAlgorithm.SelectedIndex != 0 &&
-                cmbAlgorithm.SelectedIndex != 1)
+                cmbAlgorithm.SelectedIndex != 1 &&
+                cmbAlgorithm.SelectedIndex != 2)
             {
                 MessageBox.Show(
                     "Step-by-step visualisation is currently available " +
-                    "for Breadth First Search and Depth First Search.",
+                    "for Breadth First Search, Depth First Search " +
+                    "and Hill Climbing.",
                     "Step Search",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -1232,7 +1253,9 @@ namespace PathFinderAssessment
 
             try
             {
-                // Determine selected algorithm dynamically.
+                // -----------------------------------------------------
+                // Determine algorithm dynamically.
+                // -----------------------------------------------------
                 Algorithm selectedAlgorithm =
                     GetSelectedAlgorithm();
 
@@ -1329,11 +1352,11 @@ namespace PathFinderAssessment
                 stepNumber++;
 
 
-                // Restore terrain.
+                // Redraw original terrain.
                 DrawMap();
 
 
-                // Overlay current search state.
+                // Add Open, Closed and Current overlays.
                 DrawSearchStep(
                     result);
 
@@ -1400,7 +1423,7 @@ namespace PathFinderAssessment
                             result.Path;
 
 
-                        // Draw final path over search-state colours.
+                        // Draw final path.
                         HighlightPath(
                             result.Path);
 
@@ -1441,7 +1464,7 @@ namespace PathFinderAssessment
 
 
                         // ---------------------------------------------
-                        // WRITE FINAL PATH OUTPUT FILE
+                        // WRITE PATH OUTPUT FILE
                         // ---------------------------------------------
                         if (!string.IsNullOrWhiteSpace(
                             currentMapFileName))
@@ -1502,8 +1525,7 @@ namespace PathFinderAssessment
             SearchStepResult result)
         {
             // =========================================================
-            // CLOSED LIST
-            // Already expanded.
+            // CLOSED
             // =========================================================
             result.ClosedList.ForEach(
                 coordinate =>
@@ -1535,8 +1557,7 @@ namespace PathFinderAssessment
 
 
             // =========================================================
-            // OPEN LIST
-            // Discovered but waiting to be expanded.
+            // OPEN
             // =========================================================
             result.OpenList.ForEach(
                 coordinate =>
@@ -1569,7 +1590,6 @@ namespace PathFinderAssessment
 
             // =========================================================
             // CURRENT NODE
-            // Node expanded during this step.
             // =========================================================
             if (result.CurrentNode.HasValue)
             {
@@ -1654,7 +1674,7 @@ namespace PathFinderAssessment
 
 
         // -------------------------------------------------------------
-        // RESET STEP SEARCH STATE
+        // RESET STEP SEARCH
         // -------------------------------------------------------------
         private void ResetStepSearch()
         {

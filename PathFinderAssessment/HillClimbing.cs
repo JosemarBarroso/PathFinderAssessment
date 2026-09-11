@@ -4,82 +4,121 @@ using System;
 
 namespace PathFinderAssessment
 {
-    internal class HillClimbing : PathFinderInterface
+    internal class HillClimbing :
+        PathFinderInterface,
+        SteppablePathFinderInterface
     {
-        // Finds a path from start to goal using
-        // Hill Climbing Search.
+        // =============================================================
+        // STEP-BY-STEP SEARCH STATE
+        // =============================================================
+
+        private int[,]? stepMap;
+
+        private Coord stepStart;
+        private Coord stepGoal;
+
+        private Stack<SearchNode>? stepOpen;
+        private Stack<SearchNode>? stepClosed;
+
+        private bool[,]? stepVisited;
+
+        private LinkedList<Coord>? stepOpenCoordinates;
+        private LinkedList<Coord>? stepClosedCoordinates;
+
+        private bool stepInitialised;
+        private bool stepComplete;
+        private bool stepPathFound;
+
+        private LinkedList<Coord>? stepFinalPath;
+
+
+        // =============================================================
+        // NORMAL COMPLETE HILL CLIMBING SEARCH
+        // =============================================================
+
         public bool FindPath(
             int[,] map,
             Coord start,
             Coord goal,
             ref LinkedList<Coord> path)
         {
-            // OPEN contains nodes waiting to be expanded.
-            //
-            // Hill Climbing behaves similarly to DFS because
-            // the next preferred node is placed at the front.
-            Stack<SearchNode> open = new Stack<SearchNode>();
+            // OPEN stores nodes waiting to be expanded.
+            Stack<SearchNode> open =
+                new Stack<SearchNode>();
 
-            // CLOSED contains nodes already expanded.
-            Stack<SearchNode> closed = new Stack<SearchNode>();
 
-            // Tracks coordinates already discovered.
-            bool[,] visited = new bool[
-                map.GetLength(0),
-                map.GetLength(1)
-            ];
+            // CLOSED stores nodes already expanded.
+            Stack<SearchNode> closed =
+                new Stack<SearchNode>();
 
-            // Calculate the heuristic value of the start node.
+
+            // Tracks discovered coordinates.
+            bool[,] visited =
+                new bool[
+                    map.GetLength(0),
+                    map.GetLength(1)
+                ];
+
+
+            // Calculate heuristic for start.
             int startHeuristic =
-                SearchUtilities.ManhattanDistance(start, goal);
+                SearchUtilities.ManhattanDistance(
+                    start,
+                    goal);
 
-            // Create the starting node.
-            SearchNode startNode = new SearchNode(
-                start,
-                0,
-                startHeuristic,
-                null
-            );
 
-            // Add start to OPEN.
-            open.Push(startNode);
+            SearchNode startNode =
+                new SearchNode(
+                    start,
+                    0,
+                    startHeuristic,
+                    null);
 
-            // Mark start as discovered.
-            visited[start.Row, start.Col] = true;
+
+            open.Push(
+                startNode);
+
+
+            visited[
+                start.Row,
+                start.Col] = true;
 
 
             while (!open.IsEmpty())
             {
-                // Remove the node at the front/top of OPEN.
-                SearchNode current = open.Pop();
+                // Remove the preferred node.
+                SearchNode current =
+                    open.Pop();
 
 
-                // Check whether the goal has been reached.
-                if (current.Position.Row == goal.Row &&
-                    current.Position.Col == goal.Col)
+                // -----------------------------------------------------
+                // GOAL CHECK
+                // -----------------------------------------------------
+                if (current.Position.Row ==
+                    goal.Row &&
+                    current.Position.Col ==
+                    goal.Col)
                 {
                     path =
-                        SearchUtilities.buildPathList(current);
+                        SearchUtilities.buildPathList(
+                            current);
 
                     return true;
                 }
 
 
-                // Temporary list for the successors generated
-                // from the current node.
+                // -----------------------------------------------------
+                // TEMPORARY SUCCESSOR LIST
+                // -----------------------------------------------------
                 LinkedList<SearchNode> tempList =
                     new LinkedList<SearchNode>();
 
 
-                // -------------------------------------------------
-                // Generate successors in normal rule order:
+                // -----------------------------------------------------
+                // GENERATE SUCCESSORS
                 //
                 // North → East → South → West
-                //
-                // Each successor is inserted into tempList
-                // according to its heuristic value.
-                // -------------------------------------------------
-
+                // -----------------------------------------------------
 
                 // NORTH
                 TryAddSuccessor(
@@ -89,8 +128,7 @@ namespace PathFinderAssessment
                     current,
                     goal,
                     tempList,
-                    visited
-                );
+                    visited);
 
 
                 // EAST
@@ -101,8 +139,7 @@ namespace PathFinderAssessment
                     current,
                     goal,
                     tempList,
-                    visited
-                );
+                    visited);
 
 
                 // SOUTH
@@ -113,8 +150,7 @@ namespace PathFinderAssessment
                     current,
                     goal,
                     tempList,
-                    visited
-                );
+                    visited);
 
 
                 // WEST
@@ -125,50 +161,335 @@ namespace PathFinderAssessment
                     current,
                     goal,
                     tempList,
-                    visited
-                );
+                    visited);
 
 
-                // -------------------------------------------------
-                // tempList is sorted from smallest heuristic
-                // to largest heuristic.
-                //
-                // Because OPEN is a Stack, we must push the
-                // worst nodes first and the best node last.
-                //
-                // That leaves the node with the smallest
-                // heuristic at the top of OPEN.
-                // -------------------------------------------------
-
+                // -----------------------------------------------------
                 // tempList is sorted from best heuristic to worst.
                 //
-                // Remove from the back (worst first) and push onto OPEN.
-                // Because Stack.Push adds to the front, the best node
-                // will eventually end up at the top of OPEN.
+                // Because OPEN is a stack, remove the worst node first
+                // and push it onto OPEN.
+                //
+                // The best node will therefore be pushed last and
+                // become the next node popped.
+                // -----------------------------------------------------
                 while (!tempList.IsEmpty())
                 {
-                    SearchNode node = tempList.PopBack();
+                    SearchNode node =
+                        tempList.PopBack();
 
-                    open.Push(node);
+
+                    open.Push(
+                        node);
                 }
 
 
-                // Move the current node to CLOSED.
-                closed.Push(current);
+                // Move current to CLOSED.
+                closed.Push(
+                    current);
             }
 
 
-            // OPEN became empty before the goal was found.
-            path = new LinkedList<Coord>();
+            // No path found.
+            path =
+                new LinkedList<Coord>();
+
 
             return false;
         }
 
 
-        // -------------------------------------------------------------
-        // Generates one valid successor and inserts it into the
-        // temporary list according to Manhattan distance.
-        // -------------------------------------------------------------
+        // =============================================================
+        // INITIALISE STEP-BY-STEP HILL CLIMBING
+        // =============================================================
+
+        public void InitialiseStepSearch(
+            int[,] map,
+            Coord start,
+            Coord goal)
+        {
+            stepMap =
+                map;
+
+
+            stepStart =
+                start;
+
+
+            stepGoal =
+                goal;
+
+
+            stepOpen =
+                new Stack<SearchNode>();
+
+
+            stepClosed =
+                new Stack<SearchNode>();
+
+
+            stepVisited =
+                new bool[
+                    map.GetLength(0),
+                    map.GetLength(1)
+                ];
+
+
+            stepOpenCoordinates =
+                new LinkedList<Coord>();
+
+
+            stepClosedCoordinates =
+                new LinkedList<Coord>();
+
+
+            int startHeuristic =
+                SearchUtilities.ManhattanDistance(
+                    start,
+                    goal);
+
+
+            SearchNode startNode =
+                new SearchNode(
+                    start,
+                    0,
+                    startHeuristic,
+                    null);
+
+
+            stepOpen.Push(
+                startNode);
+
+
+            stepOpenCoordinates.PushBack(
+                start);
+
+
+            stepVisited[
+                start.Row,
+                start.Col] = true;
+
+
+            stepInitialised =
+                true;
+
+
+            stepComplete =
+                false;
+
+
+            stepPathFound =
+                false;
+
+
+            stepFinalPath =
+                null;
+        }
+
+
+        // =============================================================
+        // EXECUTE ONE HILL CLIMBING EXPANSION
+        // =============================================================
+
+        public SearchStepResult Step()
+        {
+            if (!stepInitialised ||
+                stepMap == null ||
+                stepOpen == null ||
+                stepClosed == null ||
+                stepVisited == null ||
+                stepOpenCoordinates == null ||
+                stepClosedCoordinates == null)
+            {
+                throw new InvalidOperationException(
+                    "Step search has not been initialised.");
+            }
+
+
+            // Search already finished.
+            if (stepComplete)
+            {
+                return new SearchStepResult(
+                    null,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    stepPathFound,
+                    stepFinalPath);
+            }
+
+
+            // OPEN is empty.
+            if (stepOpen.IsEmpty())
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    false;
+
+
+                return new SearchStepResult(
+                    null,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    false,
+                    null);
+            }
+
+
+            // ---------------------------------------------------------
+            // POP ONE NODE FROM OPEN
+            // ---------------------------------------------------------
+            SearchNode current =
+                stepOpen.Pop();
+
+
+            stepOpenCoordinates.Remove(
+                current.Position);
+
+
+            // ---------------------------------------------------------
+            // GOAL CHECK
+            // ---------------------------------------------------------
+            if (current.Position.Row ==
+                stepGoal.Row &&
+                current.Position.Col ==
+                stepGoal.Col)
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    true;
+
+
+                stepFinalPath =
+                    SearchUtilities.buildPathList(
+                        current);
+
+
+                return new SearchStepResult(
+                    current.Position,
+                    CopyCoordinateList(
+                        stepOpenCoordinates),
+                    CopyCoordinateList(
+                        stepClosedCoordinates),
+                    true,
+                    true,
+                    stepFinalPath);
+            }
+
+
+            // ---------------------------------------------------------
+            // TEMPORARY SUCCESSOR LIST
+            // ---------------------------------------------------------
+            LinkedList<SearchNode> tempList =
+                new LinkedList<SearchNode>();
+
+
+            // ---------------------------------------------------------
+            // GENERATE SUCCESSORS
+            //
+            // North → East → South → West
+            // ---------------------------------------------------------
+
+            // NORTH
+            TryAddStepSuccessor(
+                current.Position.Row - 1,
+                current.Position.Col,
+                current,
+                tempList);
+
+
+            // EAST
+            TryAddStepSuccessor(
+                current.Position.Row,
+                current.Position.Col + 1,
+                current,
+                tempList);
+
+
+            // SOUTH
+            TryAddStepSuccessor(
+                current.Position.Row + 1,
+                current.Position.Col,
+                current,
+                tempList);
+
+
+            // WEST
+            TryAddStepSuccessor(
+                current.Position.Row,
+                current.Position.Col - 1,
+                current,
+                tempList);
+
+
+            // ---------------------------------------------------------
+            // MOVE SORTED TEMP LIST INTO OPEN
+            // ---------------------------------------------------------
+            while (!tempList.IsEmpty())
+            {
+                SearchNode node =
+                    tempList.PopBack();
+
+
+                stepOpen.Push(
+                    node);
+
+
+                stepOpenCoordinates.PushBack(
+                    node.Position);
+            }
+
+
+            // ---------------------------------------------------------
+            // MOVE CURRENT TO CLOSED
+            // ---------------------------------------------------------
+            stepClosed.Push(
+                current);
+
+
+            stepClosedCoordinates.PushBack(
+                current.Position);
+
+
+            // If OPEN is now empty, no route exists.
+            if (stepOpen.IsEmpty())
+            {
+                stepComplete =
+                    true;
+
+
+                stepPathFound =
+                    false;
+            }
+
+
+            return new SearchStepResult(
+                current.Position,
+                CopyCoordinateList(
+                    stepOpenCoordinates),
+                CopyCoordinateList(
+                    stepClosedCoordinates),
+                stepComplete,
+                stepPathFound,
+                stepFinalPath);
+        }
+
+
+        // =============================================================
+        // NORMAL SUCCESSOR GENERATION
+        // =============================================================
+
         private void TryAddSuccessor(
             int[,] map,
             int row,
@@ -178,104 +499,177 @@ namespace PathFinderAssessment
             LinkedList<SearchNode> tempList,
             bool[,] visited)
         {
-            // Ignore coordinates outside the terrain map.
-            if (!IsInsideMap(map, row, col))
+            // Outside map.
+            if (!IsInsideMap(
+                map,
+                row,
+                col))
             {
                 return;
             }
 
 
-            // Terrain value 0 represents a blocked location.
-            if (map[row, col] == 0)
+            // Blocked terrain.
+            if (map[
+                row,
+                col] == 0)
             {
                 return;
             }
 
 
-            // Ignore coordinates already discovered.
-            if (visited[row, col])
+            // Already discovered.
+            if (visited[
+                row,
+                col])
             {
                 return;
             }
 
 
             Coord successorPosition =
-                new Coord(row, col);
+                new Coord(
+                    row,
+                    col);
 
 
-            // Hill Climbing evaluates successors using
-            // Manhattan distance to the goal.
             int heuristic =
                 SearchUtilities.ManhattanDistance(
                     successorPosition,
-                    goal
-                );
+                    goal);
 
 
-            // Create the successor SearchNode.
-            SearchNode successor = new SearchNode(
-                successorPosition,
-                0,
-                heuristic,
-                current
-            );
+            SearchNode successor =
+                new SearchNode(
+                    successorPosition,
+                    0,
+                    heuristic,
+                    current);
 
 
-            // Insert the successor into tempList in ascending
-            // heuristic order.
-            //
-            // Smaller Score means closer to the goal.
+            // Sort temporary successors by heuristic.
             tempList.InsertSorted(
                 successor,
                 (first, second) =>
-                    first.Score.CompareTo(second.Score)
-            );
+                    first.Score.CompareTo(
+                        second.Score));
 
 
-            // Mark the coordinate as discovered immediately.
-            visited[row, col] = true;
+            // Mark discovered immediately.
+            visited[
+                row,
+                col] = true;
         }
 
 
-        // -------------------------------------------------------------
-        // Transfers the sorted temporary list into OPEN.
-        // -------------------------------------------------------------
-        private void PushTemporaryListOntoOpen(
-            LinkedList<SearchNode> tempList,
-            Stack<SearchNode> open)
+        // =============================================================
+        // STEP SUCCESSOR GENERATION
+        // =============================================================
+
+        private void TryAddStepSuccessor(
+            int row,
+            int col,
+            SearchNode current,
+            LinkedList<SearchNode> tempList)
         {
-            // We need to place nodes onto the Stack in reverse
-            // order because Stack.Push adds to the front.
-            //
-            // A second Stack gives us that reversal without
-            // exposing LinkedList internals.
-            Stack<SearchNode> reverseStack =
-                new Stack<SearchNode>();
-
-
-            // tempList is ordered from best to worst.
-            tempList.ForEach(node =>
+            if (stepMap == null ||
+                stepVisited == null)
             {
-                reverseStack.Push(node);
-            });
-
-
-            // reverseStack now gives us worst to best.
-            //
-            // Push those onto OPEN so the best node ends up
-            // at the top/front and is expanded next.
-            while (!reverseStack.IsEmpty())
-            {
-                open.Push(
-                    reverseStack.Pop()
-                );
+                return;
             }
+
+
+            // Outside map.
+            if (!IsInsideMap(
+                stepMap,
+                row,
+                col))
+            {
+                return;
+            }
+
+
+            // Blocked.
+            if (stepMap[
+                row,
+                col] == 0)
+            {
+                return;
+            }
+
+
+            // Already discovered.
+            if (stepVisited[
+                row,
+                col])
+            {
+                return;
+            }
+
+
+            Coord successorPosition =
+                new Coord(
+                    row,
+                    col);
+
+
+            int heuristic =
+                SearchUtilities.ManhattanDistance(
+                    successorPosition,
+                    stepGoal);
+
+
+            SearchNode successor =
+                new SearchNode(
+                    successorPosition,
+                    0,
+                    heuristic,
+                    current);
+
+
+            // Insert into the temporary list in
+            // ascending heuristic order.
+            tempList.InsertSorted(
+                successor,
+                (first, second) =>
+                    first.Score.CompareTo(
+                        second.Score));
+
+
+            // Mark immediately to prevent duplicates.
+            stepVisited[
+                row,
+                col] = true;
         }
 
 
-        // -------------------------------------------------------------
-        // Checks whether the supplied coordinate is inside the map.
-        // -------------------------------------------------------------
+        // =============================================================
+        // COPY COORDINATE LIST
+        // =============================================================
+
+        private LinkedList<Coord> CopyCoordinateList(
+            LinkedList<Coord> source)
+        {
+            LinkedList<Coord> copy =
+                new LinkedList<Coord>();
+
+
+            source.ForEach(
+                coordinate =>
+                {
+                    copy.PushBack(
+                        coordinate);
+                });
+
+
+            return copy;
+        }
+
+
+        // =============================================================
+        // MAP BOUNDARY CHECK
+        // =============================================================
+
         private bool IsInsideMap(
             int[,] map,
             int row,
